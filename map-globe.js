@@ -55,6 +55,7 @@ class GlobeMap {
     this.globe = new THREE.Group();
     this.earthMoonSystem.add(this.globe);
     this.raycaster = new THREE.Raycaster();
+    this.raycaster.params.Line.threshold = .003;
     this.labelRaycaster = new THREE.Raycaster();
     this.viewFrustum = new THREE.Frustum();
     this.viewProjection = new THREE.Matrix4();
@@ -341,6 +342,16 @@ class GlobeMap {
         this.labels.push({ node, label });
       }
     });
+    (payload.regions || []).forEach(region => {
+      const polygons = region.geometry.type === "Polygon" ? [region.geometry.coordinates] : region.geometry.type === "MultiPolygon" ? region.geometry.coordinates : [];
+      const center = this.coordinateVector(region.labelPosition.lat,region.labelPosition.lon,1.003);
+      polygons.forEach(polygon => polygon.forEach(ring => {
+        const points = ring.map(([lon,lat])=>this.coordinateVector(lat,lon,1.003).sub(center));
+        const node = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineBasicMaterial({color:0x111111}));
+        node.position.copy(center);node.userData={id:region.id,name:region.name,body:"earth",ownsGeometry:true,formattedValue:`${region.recordings} recordings · county boundary`};
+        this.globe.add(node);this.nodes.push(node);
+      }));
+    });
     this.scene.updateMatrixWorld(true);
     this.updateMoonNodes();
     this.scene.updateMatrixWorld(true);
@@ -370,6 +381,7 @@ class GlobeMap {
     this.nodes.forEach(node => {
       node.parent?.remove(node);
       node.material.dispose();
+      if(node.userData.ownsGeometry) node.geometry.dispose();
     });
     this.nodes = [];
     this.relationships.forEach(line => {
@@ -393,7 +405,7 @@ class GlobeMap {
 
   intersectionAt(event) {
     this.pointerFromEvent(event);
-    const intersections = this.raycaster.intersectObjects(this.nodes, false);
+    const intersections = this.raycaster.intersectObjects(this.nodes, false).filter(hit => !hit.object.userData.ownsGeometry || !this.labelOccludedByEarth(hit.point));
     const lunarSurface = intersections.find(({ object }) => this.moonSurfaceNodeVisible(object));
     return lunarSurface?.object || intersections[0]?.object || null;
   }
@@ -583,6 +595,8 @@ class GlobeMap {
   }
 
   reset() {
+    this.camera.zoom = 1;
+    this.camera.updateProjectionMatrix();
     this.earthMoonSystem.rotation.set(DEFAULT_GLOBE_ROTATION.x, DEFAULT_GLOBE_ROTATION.y, 0);
     this.globe.rotation.set(0, 0, 0);
     this.moonOrbit.rotation.set(0, DEFAULT_MOON_ORBIT_ANGLE, 0);
@@ -612,6 +626,18 @@ try {
   const globe = new GlobeMap();
   window.ufoGlobe = globe;
   window.addEventListener("ufo-map-render", event => globe.render(event.detail));
+  window.addEventListener("ufo-map-focus", event => {
+    const {lat,lon}=event.detail;
+    if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
+    globe.autoRotate = false;
+    window.dispatchEvent(new CustomEvent("ufo-map-playback", {detail:{playing:false}}));
+    globe.camera.position.set(0,0,MIN_CAMERA_DISTANCE);
+    globe.camera.zoom=4;
+    globe.camera.updateProjectionMatrix();
+    globe.earthMoonSystem.rotation.set(0,0,0);
+    globe.globe.quaternion.setFromUnitVectors(globe.coordinateVector(lat,lon,1).normalize(),new THREE.Vector3(0,0,1));
+    globe.draw();
+  });
   window.addEventListener("ufo-map-visibility", event => globe.setVisible(event.detail.visible));
   if (window.pendingGlobeRender) globe.render(window.pendingGlobeRender);
 } catch (_) {

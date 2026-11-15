@@ -53,7 +53,7 @@ def asset_projection(asset, archive_id):
     return {"name": name, "url": url, "sha256": token(asset.get("sha256"), HEX64), "bytes": asset["bytes"]}
 
 
-def load_field_observations(input_root: Path) -> dict:
+def load_field_observations(input_root: Path, *, review_data_dir: Path | None = None) -> dict:
     """Rebuild the projection from current records; tombstones cannot leave stale edges.
 
     Output is constructed from an allowlist. Unknown source fields (including GPS,
@@ -61,6 +61,21 @@ def load_field_observations(input_root: Path) -> dict:
     fails the build rather than silently disappearing from an apparently complete graph.
     """
     root = Path(input_root) / "Field-Station"
+    data_dir = Path(review_data_dir) if review_data_dir is not None else Path(__file__).resolve().parents[1] / "data"
+    reviews_path = data_dir / "field_location_reviews.json"
+    location_reviews = {}
+    review_digest = None
+    if reviews_path.exists():
+        raw_reviews = reviews_path.read_bytes()
+        review_digest = hashlib.sha256(raw_reviews).hexdigest()
+        reviews = json.loads(raw_reviews)
+        require(reviews.get("schema") == "ufo-files-field-location-reviews/v1", "Invalid location review schema")
+        for review in reviews.get("reviews", []):
+            require(review.get("method") == "station_operator_confirmation", "Location review needs explicit confirmation")
+            for observation_id in review.get("observationIds", []):
+                require(observation_id not in location_reviews, "Conflicting location reviews")
+                location_reviews[observation_id] = review
+
     require(not root.is_symlink(), "Observation collection must not be a symlink")
     nodes, edges, observations = {}, {}, []
     statuses = {"published": 0, "withdrawn": 0, "pending_evidence": 0}
@@ -182,12 +197,24 @@ def load_field_observations(input_root: Path) -> dict:
                 prediction["score"] = model["score"]
             edge(oid, model_node, "predicted_by", provenance, scope=model["scope"], **prediction)
         location = record.get("location", {})
+        location_source = "capture_metadata"
+        location_review = location_reviews.get(oid)
+        if location_review:
+            coarse_review = {k: location_review[k] for k in ("county", "state", "country")}
+            if location.get("status") == "known":
+                require(all(location.get(k) == v for k, v in coarse_review.items()), "Capture location conflicts with confirmed historical location")
+            else:
+                location = {"status": "known", "precision": "county", **coarse_review}
+                location_source = "station_operator_confirmation"
+
         require(location.get("precision") == "county" and location.get("status") in {"known", "unknown"}, "Invalid location precision")
         if location["status"] == "known":
             coarse = {key: location.get(key) for key in ("county", "state", "country")}
             require(all(isinstance(v, str) and 0 < len(v) <= 120 and not any(ord(c) < 32 for c in v) for v in coarse.values()), "Invalid county region")
             region = node("county_region", uid("region", coarse), precision="county", **coarse)
-            edge(oid, region, "located_in", provenance, precision="county")
+            edge(oid, region, "located_in", provenance, precision="county", locationSource=location_source,
+                 **({"locationReviewId": location_review["id"], "locationReviewSha256": review_digest}
+                    if location_source == "station_operator_confirmation" else {}))
         context = record.get("ce5_playback", {"state": "unknown"})
         require(context.get("state") in {"on", "off", "unknown"}, "Invalid playback context")
         playback = {"state": context["state"]}
@@ -197,10 +224,22 @@ def load_field_observations(input_root: Path) -> dict:
         observations.append({"id": oid, "provenance": provenance, "reviewedObjectIds": annotation_ids,
                              "recordingIds": sorted(recording_ids.values()), "evidence": bundles,
                              "ce5Playback": playback})
+    regions_path = data_dir / "field_regions.json"
+    region_references = []
+    if regions_path.exists():
+        reference = json.loads(regions_path.read_text())
+        require(reference.get("schema") == "ufo-files-county-boundaries/v1", "Invalid county boundary schema")
+        for n in nodes.values():
+            if n["type"] != "county_region":
+                continue
+            matches = [r for r in reference["regions"] if all(r.get(k) == n[k] for k in ("county", "state", "country"))]
+            require(len(matches) <= 1, "Ambiguous county boundary")
+            if matches:
+                region_references.append({"id": n["id"], **matches[0]})
     return {
         "schema": SCHEMA,
         "scope": "Human-reviewed anomalous objects with verified Archive evidence; not transcript claims or proof of cause",
-        "policy": {"locations": "County only; no coordinates or inferred points",
+        "policy": {"locations": "County boundaries only; no station coordinates or inferred station points",
                    "time": "Recording coverage is not an exact sighting time or duration",
                    "sourceFamilies": "Shared recordings do not constitute independent corroboration",
                    "rf": "Linked recorded evidence only; distinct from frequency mentions in transcripts",
@@ -211,6 +250,7 @@ def load_field_observations(input_root: Path) -> dict:
                    "recordings": sum(n["type"] == "recording" for n in nodes.values()),
                    "stations": sum(n["type"] == "station" for n in nodes.values()),
                    "nodes": len(nodes), "edges": len(edges)},
+        "regions": region_references,
         "observations": observations,
         "nodes": sorted(nodes.values(), key=lambda n: n["id"]),
         "edges": sorted(edges.values(), key=lambda e: e["id"]),

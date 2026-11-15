@@ -737,3 +737,20 @@ body.whitepaper-active .builder-panel .step:not([data-step="1"]) { display: none
   body.whitepaper-active .stage,
   body.whitepaper-active .chart-wrap { display: block; height: auto; overflow: visible; margin: 0; border: 0; }
 }
+
+/* Field evidence has its own scroll region, separate from documentary scales. */
+.stage.field-stage { grid-template-rows: auto minmax(220px, 1fr) auto; }
+.stage.field-stage #chart { min-height: 220px; }
+.field-panel { max-height: 210px; overflow: auto; border-top: 1px solid var(--line); padding: 12px 20px; }
+.field-panel[hidden] { display: none; }
+.field-panel h3 { font-size: 13px; margin: 0 0 6px; }
+.field-panel p { font-size: 11px; margin: 0 0 10px; }
+.field-recordings { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 6px; }
+.field-recording { width:100%; display:flex; flex-direction:column; text-align:left; gap:4px; padding:8px; border:1px solid var(--line); color:inherit; background:transparent; cursor:pointer; font:inherit; font-size:11px; overflow-wrap:anywhere; }
+.field-recording:hover,.field-recording:focus-visible { background:var(--soft); outline:1px solid currentColor; }
+.field-recording small { font-size:10px; }
+.field-spectrum svg { width:100%; height:auto; }
+.evidence-card select { max-width:100%; }
+@media(max-width:700px){.field-panel{padding:10px;max-height:180px}.field-recordings{grid-template-columns:1fr}}
+
+body.graph-fullscreen .stage.field-stage { grid-template-rows: minmax(220px,1fr) auto; }

@@ -356,7 +356,7 @@ const DEFAULT = {
   coverageRows: "collection", coverageColumns: "category", coverageMetric: "documentCount", coverageCompare: false,
   coverageACollection: "all", coverageAFrom: "", coverageATo: "", coverageBCollection: "all", coverageBFrom: "", coverageBTo: "",
   topicTerm: "all", topicSearch: "",
-  clockPeriod: "all", clockSearch: "", clockResolution: "hour",
+  fieldEvidence: "all", clockPeriod: "all", clockSearch: "", clockResolution: "hour",
   bloodType: "all", bloodSearch: "", bloodView: "scatter",
   whitepaperAnchor: "",
   programStatus: "all", programKind: "all", programSearch: "",
@@ -1301,7 +1301,7 @@ function renderControls() {
     const columnChecks = fields.map(field => `<label class="check-chip"><input type="checkbox" data-table-column="${field}" ${state.config.tableColumns.includes(field) ? "checked" : ""}><span>${escapeHTML(label(field))}</span></label>`).join("");
     roles = controlSelect("tableRole", "Rows", [{ value: "entity", label: "Entities" }, { value: "document", label: "Transcript files" }, { value: "case", label: "UAP cases" }, { value: "source", label: "Collections" }]) + `<div class="control"><div class="control-title">Columns <span>${state.config.tableColumns.length}</span></div><div class="check-grid">${columnChecks}</div></div>`;
   }
-  $("#roleControls").innerHTML = roles;
+  $("#roleControls").innerHTML = roles + (["clock", "signals", "map"].includes(state.config.type) ? controlSelect("fieldEvidence", "Evidence", [{value:"all",label:"All evidence"},{value:"documents",label:"Documents"},{value:"field",label:"Field Station"}]) : "");
 
   const sizeOptions = state.config.type === "timeline" && state.config.timelineRole === "event"
     ? [...(state.config.timelineGrouping ? ["eventCount"] : []), "independentSourceFamilyCount", "documentCount", "confidence"]
@@ -1407,7 +1407,7 @@ function renderControls() {
     const checked = state.config.type === "book" ? category === "book" : state.config.type === "document" || state.config.categories.includes(category);
     return `<label class="check-chip"><input type="checkbox" data-category="${category}" ${checked ? "checked" : ""} ${fixedCategories ? "disabled" : ""}><span>${escapeHTML(label(category))}</span></label>`;
   }).join("");
-  const sources = state.catalog?.sources || [];
+  const sources = [...(state.catalog?.sources || []), ...(["clock","signals","map"].includes(state.config.type) ? [{name:"Field Station"}] : [])];
   const sourceNames = sources.map(source => source.name);
   const selectedSourceCount = state.config.allSources ? sourceNames.length : sourceNames.filter(name => state.config.sources.includes(name)).length;
   const sourceChecks = sources.map(source => `<label class="check-chip"><input type="checkbox" data-source="${escapeHTML(source.name)}" ${sourceIsSelected(source.name, state.config.sources, state.config.allSources) ? "checked" : ""}><span>${escapeHTML(source.name)}</span></label>`).join("");
@@ -1457,7 +1457,7 @@ function renderControls() {
       + `<div class="control"><label for="bloodSearch">Search evidence</label><input id="bloodSearch" class="text-input" type="search" value="${escapeHTML(state.config.bloodSearch)}" placeholder="Search excerpt, title, or collection" data-blood-search></div><div class="control"><div class="control-title">Collections <span>${selectedSourceCount} / ${sourceNames.length} selected</span></div><div class="check-grid">${sourceChecks}</div></div><button class="button" type="button" data-blood-reset>Reset filters</button>`;
   }
   if (state.config.type === "clock") {
-    const clockSources = [...new Set((state.clockCatalog?.documents || []).map(doc => doc.source))].sort();
+    const clockSources = [...new Set([...(state.clockCatalog?.documents || []).map(doc => doc.source), "Field Station"])].sort();
     $("#filterControls").innerHTML = `<div class="control"><label for="clockSearch">Search passages</label><input class="text-input" id="clockSearch" type="search" value="${escapeHTML(state.config.clockSearch)}" data-clock-search></div><div class="control"><div class="control-title">Collections</div><div class="check-grid">${clockSources.map(source => `<label class="check-chip"><input type="checkbox" data-source="${escapeHTML(source)}" ${sourceMatches(source) ? "checked" : ""}><span>${escapeHTML(source)}</span></label>`).join("")}</div></div>`;
   }
   if (["drugs", "technologies"].includes(state.config.type)) {
@@ -2454,8 +2454,9 @@ function renderScatter() {
 
 function renderMap() {
   prepareMapView();
-  const { mapped, data, unmapped } = mapLocationData();
-  if (!data.length) {
+  const { mapped, data, unmapped } = state.config.fieldEvidence === "field" ? {mapped:[],data:[],unmapped:0} : mapLocationData();
+  const regions = fieldRegionPayload();
+  if (!data.length && !regions.length) {
     hideMapView();
     return showEmpty();
   }
@@ -2465,6 +2466,7 @@ function renderMap() {
   const primaryIds = new Set(data.map(entity => entity.id));
   const visibleItems = [...new Map([...data, ...overlay.nodes].map(entity => [entity.id, entity])).values()];
   const payload = {
+    regions,
     labelSize: state.config.labelSize,
     moonTransitSeconds: state.config.moonTransitSeconds,
     relationshipLayer: state.config.relationshipLayer,
@@ -2487,7 +2489,7 @@ function renderMap() {
   window.dispatchEvent(new CustomEvent("ufo-map-render", { detail: payload }));
   window.dispatchEvent(new CustomEvent("ufo-map-visibility", { detail: { visible: true } }));
   drawIntensityLegend();
-  setSummary(`${data.length} of ${mapped.length} mapped locations${unmapped ? ` · ${unmapped} unmapped` : ""}`, "map");
+  setSummary(`${regions.length} Field Station county regions · ${data.length} of ${mapped.length} mapped locations${unmapped ? ` · ${unmapped} unmapped` : ""}`, "map");
 }
 
 function preferredBookTitleAspect(item) {
@@ -4645,6 +4647,107 @@ async function ensureClockCatalog() {
   try { return await state.clockPromise; } catch (error) { state.clockPromise = null; throw error; }
 }
 
+const fieldIndexCache = new WeakMap();
+function fieldIndex() {
+  const section = state.catalog?.fieldObservations;
+  if (!section) return FieldEvidence.index();
+  if (!fieldIndexCache.has(section)) fieldIndexCache.set(section, FieldEvidence.index(section));
+  return fieldIndexCache.get(section);
+}
+function fieldRecordings() {
+  if (state.config.fieldEvidence === 'documents' || !sourceIsSelected('Field Station', state.config.sources, state.config.allSources)) return [];
+  const query = state.config.type === 'clock' ? String(state.config.clockSearch || '').toLowerCase().trim() : '';
+  return fieldIndex().recordings.filter(r => !query || [r.recordingId, 'Field Station', ...[...r.regions].map(id=>fieldIndex().nodes.get(id)?.county)].some(v=>String(v || '').toLowerCase().includes(query)));
+}
+function fieldTime(r) { return Number.isFinite(r.startedEpoch) ? new Date(r.startedEpoch*1000).toISOString().replace('T',' ').replace(/\.\d{3}Z$/, ' UTC') : 'Start time unavailable'; }
+function fieldRegionName(id) { const n=fieldIndex().nodes.get(id); return n ? `${n.county} County, ${n.state}, ${n.country}` : 'Location unavailable'; }
+function fieldRegionPayload() {
+  const recordings=fieldRecordings();
+  return fieldIndex().regions.filter(region=>recordings.some(r=>r.regions.has(region.id))).map(region=>({...region,recordings:recordings.filter(r=>r.regions.has(region.id)).length}));
+}
+function renderFieldPanel() {
+  const panel=$('#fieldObservationsPanel');
+  const active=['clock','signals','map'].includes(state.config.type);
+  panel.hidden=!active;
+  $('.stage').classList.toggle('field-stage',active);
+  if (!active) { panel.replaceChildren(); return; }
+  const records=state.config.type==='clock'?FieldEvidence.clock(fieldRecordings(),state.config.clockPeriod).map(o=>o.recording):fieldRecordings(), signal=state.config.type==='signals';
+  const shown=signal?records.filter(r=>[...r.bundles.values()].some(b=>b.assets.some(a=>a.name==='rf.jsonl'))):records;
+  panel.replaceChildren();
+  const heading=document.createElement('h3'); heading.textContent=`Field Station · ${formatNumber(shown.length)} ${signal?'recordings with RF evidence':'recordings'}`; panel.append(heading);
+  const note=document.createElement('p'); note.textContent=state.config.type==='clock'?'Recording starts in UTC, not exact sighting times. Diamonds identify Field Station recordings.':signal?'Recorded receiver spectra and Archive evidence; separate from documentary frequency mentions above.':'County boundaries show reported regions, not station positions.';panel.append(note);
+  if(!shown.length){const p=document.createElement('p');p.textContent=fieldIndex().recordings.length?'No Field Station recordings match these filters.':'No published Field Station records in this catalog yet.';panel.append(p);return;}
+  if(state.config.type==='map') for(const region of fieldRegionPayload()) {
+    const button=document.createElement('button');button.className='button';button.textContent=`${region.name} · ${region.recordings} recordings`;
+    button.onclick=()=>{updateConfig('fieldEvidence','field',true);inspectFieldRegion(region.id);window.dispatchEvent(new CustomEvent('ufo-map-focus',{detail:region.labelPosition}));};panel.append(button);
+  }
+  const list=document.createElement('div');list.className='field-recordings';panel.append(list);let count=0;
+  const more=document.createElement('button');more.className='button';more.textContent='More recordings';
+  function append(){for(const r of shown.slice(count,count+20)){
+    const button=document.createElement('button');button.className='field-recording';button.type='button';
+    const title=document.createElement('span');title.textContent=fieldTime(r);
+    const detail=document.createElement('small');detail.textContent=`${r.captureKind} · ${r.objects.size} reviewed objects · ${r.regions.size?[...r.regions].map(fieldRegionName).join('; '):'Location unavailable'}`;
+    button.append(title,detail);button.onclick=()=>inspectFieldRecording(r);list.append(button);
+  }count+=20;more.hidden=count>=shown.length;}
+  more.onclick=append;append();panel.append(more);
+}
+function inspectFieldRegion(id) {
+  const records=fieldRecordings().filter(r=>r.regions.has(id));
+  inspectFieldRecordings(records,fieldRegionName(id),'County-level region confirmed by capture metadata or an explicitly scoped operator review. No station coordinates are shown.');
+}
+function inspectFieldRecordings(records,title,note='Recording start times are in UTC. A recording can contain multiple reviewed objects; it is not independent corroboration.') {
+  showInspector('Field Station',title,[[records.length,'recordings'],[new Set(records.flatMap(r=>[...r.observations])).size,'observations']],[],note);
+  const target=$('#inspectorContent .evidence-list');target.replaceChildren();
+  for(const r of records){const button=document.createElement('button');button.type='button';button.className='field-recording';button.textContent=fieldTime(r);button.onclick=()=>inspectFieldRecording(r);target.append(button);}
+}
+function inspectFieldRecording(r) {
+  showInspector('Field Station',r.recordingId,[[r.objects.size,'reviewed objects'],[r.observations.size,'observations']],[],`${fieldTime(r)} · ${r.regions.size?[...r.regions].map(fieldRegionName).join('; '):'Location unavailable'}. Recording coverage is not an exact sighting time. Human-reviewed anomalous does not establish a cause.`);
+  const target=$('#inspectorContent .evidence-list');target.replaceChildren();
+  for(const b of r.bundles.values()) {
+    const card=document.createElement('div');card.className='evidence-card';
+    const link=document.createElement('a');link.href=b.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Open Internet Archive bundle ↗';card.append(link);
+    for(const asset of b.assets.filter(a=>['video.mp4','rf.jsonl','review-annotations.json'].includes(a.name))) {
+      const p=document.createElement('p'),a=document.createElement('a');a.href=asset.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=asset.name;p.append(a);card.append(p);
+      if(asset.name==='rf.jsonl') {const button=document.createElement('button');button.className='button';button.textContent='Inspect RF spectrum';button.onclick=()=>loadFieldSpectrum(asset,card,button);card.append(button);}
+    }
+    target.append(card);
+  }
+}
+async function loadFieldSpectrum(asset,card,button) {
+  const max=32*1024*1024;
+  const status=document.createElement('p');status.setAttribute('role','status');card.append(status);
+  if(asset.bytes>max){status.textContent='This RF file exceeds the preview limit. Use the RF download link.';return;}
+  button.disabled=true;status.textContent='Loading and verifying recorded RF…';
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
+  try {
+    if(!crypto.subtle) throw new Error('A secure connection is required to verify RF evidence.');
+    const response=await fetch(asset.url,{signal:controller.signal,credentials:'omit',referrerPolicy:'no-referrer'});
+    if(!response.ok || !response.body)throw new Error('RF evidence could not be downloaded.');
+    const reader=response.body.getReader(),chunks=[];let bytes=0;
+    while(true){const {done,value}=await reader.read();if(done)break;bytes+=value.byteLength;if(bytes>max || bytes>asset.bytes){await reader.cancel();throw new Error('RF file size does not match the evidence record.');}chunks.push(value);}
+    if(bytes!==asset.bytes)throw new Error('RF file size does not match the evidence record.');
+    const data=new Uint8Array(bytes);let offset=0;for(const chunk of chunks){data.set(chunk,offset);offset+=chunk.length;}
+    const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',data))].map(v=>v.toString(16).padStart(2,'0')).join('');
+    if(hash!==asset.sha256)throw new Error('RF checksum does not match the published evidence.');
+    const snapshots=FieldEvidence.spectra(new TextDecoder().decode(data));
+    if(!snapshots.length)throw new Error('No supported recorded spectra in this file.');
+    if(!card.isConnected)return;
+    status.textContent='Verified RF evidence · receiver dB (uncalibrated). Solid: average; dashed: maximum.';
+    const select=document.createElement('select');select.setAttribute('aria-label','Recorded RF snapshot');
+    snapshots.forEach((s,i)=>{const option=document.createElement('option');option.value=i;option.textContent=`${s.stamp} · ${s.range[0]/1e6}–${s.range[1]/1e6} MHz`;select.append(option);});
+    const plot=document.createElement('div');plot.className='field-spectrum';card.append(select,plot);
+    select.onchange=()=>drawFieldSpectrum(plot,snapshots[Number(select.value)]);select.onchange();button.hidden=true;
+  } catch(error){if(card.isConnected)status.textContent=error.name==='AbortError'?'RF preview timed out. Retry or use the download link.':`${error.message} Use the download link or retry.`;}
+  finally{clearTimeout(timer);button.disabled=false;}
+}
+function drawFieldSpectrum(target,s) {
+  target.replaceChildren();const svg=el('svg',{viewBox:'0 0 340 190',role:'img','aria-label':`Recorded RF spectrum ${s.range[0]/1e6} to ${s.range[1]/1e6} MHz`});target.append(svg);
+  const finite=[...s.average,...s.maximum].filter(Number.isFinite),low=Math.min(...finite),high=Math.max(low+1,...finite);
+  for(let i=0;i<=4;i++){const value=low+(high-low)*i/4,y=150-i*32;svg.append(el('line',{x1:45,x2:330,y1:y,y2:y,stroke:'currentColor',opacity:.2}),el('text',{x:40,y:y+4,'text-anchor':'end','font-size':10,fill:'currentColor'},value.toFixed(0)));}
+  for(const [values,dash] of [[s.average,''],[s.maximum,'4 3']]){let d='',pen=false;values.forEach((v,i)=>{if(!Number.isFinite(v)){pen=false;return;}const x=45+(i+.5)/values.length*285,y=150-(v-low)/(high-low)*128;d+=`${pen?'L':'M'}${x.toFixed(2)},${y.toFixed(2)} `;pen=true;});svg.append(el('path',{d,fill:'none',stroke:'currentColor','stroke-width':1.2,'stroke-dasharray':dash}));}
+  svg.append(el('text',{x:45,y:178,'font-size':10,fill:'currentColor'},`${s.range[0]/1e6} MHz`),el('text',{x:330,y:178,'text-anchor':'end','font-size':10,fill:'currentColor'},`${s.range[1]/1e6} MHz`));
+}
+
 function filteredClockMentions(catalog = state.clockCatalog, config = state.config) {
   const query = String(config.clockSearch || "").trim().toLowerCase();
   const documents = new Map((catalog?.documents || []).map(doc => [doc.id, doc]));
@@ -4717,10 +4820,11 @@ function inspectClockGroup(group) {
 
 function renderClock() {
   const { svg, width, height } = clearChart();
-  const observations = filteredClockMentions();
+  const observations = state.config.fieldEvidence === "field" ? [] : filteredClockMentions();
   const interval = ({ hour: 60, quarter: 15, minute: 1 })[state.config.clockResolution] || 60;
   const groups = clockGroups(observations, interval);
-  if (!groups.length) return showEmpty();
+  const fieldGroups = clockGroups(FieldEvidence.clock(fieldRecordings(), state.config.clockPeriod), interval);
+  if (!groups.length && !fieldGroups.length) return showEmpty();
   const radius = Math.max(40, Math.min(width, height) / 2 - 34), cx = width / 2, cy = height / 2;
   svg.append(el("circle", { cx, cy, r: radius, fill: "none", stroke: "var(--line)", "stroke-width": 1 }));
   for (let tick = 0; tick < 60; tick++) {
@@ -4754,17 +4858,25 @@ function renderClock() {
     });
     svg.append(mark);
   });
+  fieldGroups.forEach(group => {
+    const p = clockPosition(group.minute, Math.max(8, clockRingRadius(group.period, radius) - 18), cx, cy);
+    const mark = el("path", {d:`M${p.x},${p.y-6} l6,6 -6,6 -6,-6 Z`, fill:"var(--ink)", stroke:"var(--paper)", "stroke-width":1, role:"button", tabindex:0, class:"field-clock-point", "aria-label":`${clockGroupLabel(group)} UTC · ${group.observations.length} Field Station recording starts`});
+    addTitle(mark, `${clockGroupLabel(group)} UTC · ${group.observations.length} recording starts`);
+    const inspect=()=>inspectFieldRecordings(group.observations.map(o=>o.recording),`${clockGroupLabel(group)} UTC`);
+    mark.addEventListener("click",inspect);mark.addEventListener("keydown",e=>{if(["Enter"," "].includes(e.key)){e.preventDefault();inspect();}});svg.append(mark);
+  });
   $("#legend").innerHTML = "";
-  setSummary(`${formatNumber(observations.length)} mentions · ${formatNumber(new Set(observations.map(item => item.documentId)).size)} documents · ${new Set(groups.map(group => group.minute)).size} ${interval === 60 ? "hours" : interval === 15 ? "intervals" : "times"}`, "clock");
+  setSummary(`${fieldGroups.reduce((n,g)=>n+g.observations.length,0)} Field Station recording starts · ${formatNumber(observations.length)} mentions · ${formatNumber(new Set(observations.map(item => item.documentId)).size)} documents · ${new Set(groups.map(group => group.minute)).size} ${interval === 60 ? "hours" : interval === 15 ? "intervals" : "times"}`, "clock");
 }
 
 function exportClockTimes() {
   const documents = new Map(state.clockCatalog.documents.map(doc => [doc.id, doc]));
   const header = ["Matched time", "Dial time", "24-hour time", "AM/PM", "Zone", "Document", "Collection", "Segment", "Excerpt", "Source"];
-  const rows = filteredClockMentions().map(item => {
+  const rows = (state.config.fieldEvidence === "field" ? [] : filteredClockMentions()).map(item => {
     const doc = documents.get(item.documentId);
     return [item.matchedText, clockTimeLabel(item.minuteOfDial), item.hour24 == null ? "" : `${String(item.hour24).padStart(2, "0")}:${String(item.minute).padStart(2, "0")}`, item.period, item.zone, doc?.title, item.source, item.segment, item.excerpt, doc ? machineDataPathURL(doc.path, state.clockCatalog.input) : ""];
   });
+  for(const item of FieldEvidence.clock(fieldRecordings(),state.config.clockPeriod)) rows.push([fieldTime(item.recording),clockTimeLabel(item.minuteOfDial),new Date(item.recording.startedEpoch*1000).toISOString().slice(11,16),item.period,"UTC",item.recording.recordingId,"Field Station","Recording start","Not an exact sighting time",[...item.recording.bundles.values()][0]?.url || ""]);
   downloadText("ufo-files-time-mentions.csv", `${[header, ...rows].map(row => row.map(csvCell).join(",")).join("\n")}\n`, "text/csv");
 }
 
@@ -4817,8 +4929,12 @@ function exportBloodTypes() {
 
 function renderSignals() {
   clearChart();
-  const items = filteredSignalFrequencies();
-  if (!items.length) return showEmpty();
+  const items = state.config.fieldEvidence === "field" ? [] : filteredSignalFrequencies();
+  if (!items.length) {
+    showEmpty();
+    if(fieldRecordings().length) $("#emptyState").textContent="Choose a Field Station recording below to inspect its recorded RF spectrum.";
+    return;
+  }
   const svg = $("#chart"), { width, height } = dimensions();
   const margin = { top: 42, right: 28, bottom: 66, left: 56 };
   const baseline = height - margin.bottom;
@@ -5852,6 +5968,8 @@ function renderGraph() {
   $("#chartWrap").classList.toggle("claims-mode", state.config.type === "claims");
   $("#chartWrap").classList.toggle("coverage-mode", state.config.type === "coverage");
   $("#emptyState").hidden = true;
+  $("#emptyState").textContent = "No records match these settings.";
+  renderFieldPanel();
   $("#graphTitle").textContent = state.config.title;
   $("#resetZoom").hidden = !["network", "map", "solar"].includes(state.config.type);
   $("#mapAnimationButton").hidden = state.config.type !== "map";
@@ -7540,6 +7658,7 @@ $("#resetZoom").addEventListener("click", () => {
   commitConfig(false);
 });
 window.addEventListener("ufo-map-select", event => {
+  if(fieldIndex().regions.some(r=>r.id===event.detail.entityId)) return inspectFieldRegion(event.detail.entityId);
   const entity = state.catalog?.entities.find(item => item.id === event.detail.entityId);
   if (entity) inspectEntity(filteredEntity(entity));
 });
