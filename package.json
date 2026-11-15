@@ -9,5 +9,6 @@
     "playwright": "1.62.0",
     "qrcode-generator": "1.4.4",
     "svg2pdf.js": "2.7.0"
-  }
+  },
+  "license": "SEE LICENSE IN LICENSE"
 }
