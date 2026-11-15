@@ -25,6 +25,8 @@ on:
       - "data/curated_entities.json"
       - "data/curated_events.json"
       - "data/claims.json"
+      - "data/field_location_reviews.json"
+      - "data/field_regions.json"
       - "data/craft_icon_briefs.json"
       - "data/craft_taxonomy.json"
       - "data/species_taxonomy.json"
@@ -123,6 +125,8 @@ jobs:
             data/astronomy_taxonomy.json \
             data/case_reviews.json \
             data/claims.json \
+            data/field_location_reviews.json \
+            data/field_regions.json \
             data/craft_taxonomy.json \
             data/curated_entities.json \
             data/curated_events.json \
@@ -268,7 +272,7 @@ jobs:
       - name: Test app against checked-in catalog
         if: needs.changes.outputs.catalog != 'true'
         run: |
-          node --test tests/test_app.js
+          node --test tests/test_app.js tests/test_field_views.js
 
   extract:
     needs: [changes, validate]
@@ -437,7 +441,7 @@ jobs:
           python3 -m unittest discover -s tests -v
           node --check app.js
           node --check map-globe.js
-          node --test tests/test_app.js
+          node --test tests/test_app.js tests/test_field_views.js
 
   publish:
     needs: [changes, validate, extract]
@@ -571,7 +575,7 @@ jobs:
           python3 -m unittest discover -s tests -v
           node --check app.js
           node --check map-globe.js
-          node --test tests/test_app.js
+          node --test tests/test_app.js tests/test_field_views.js
 
       - name: Commit refreshed catalog
         env:

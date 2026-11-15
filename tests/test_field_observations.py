@@ -82,12 +82,12 @@ class FieldObservationTests(unittest.TestCase):
         self.assertEqual(sum(n["type"] == "archive_bundle" for n in graph["nodes"]), 1)
 
     def test_private_data_is_not_projected(self):
-        self.record["location"].update(latitude=37.1, longitude=-122.1)
+        self.record["location"].update(latitude=37.123456789, longitude=-122.123456789)
         self.record["notes"] = "secret private text"
         self.record["archive_bundles"][0]["assets"][0]["private_source"] = "/Volumes/private"
         self.save()
         output = json.dumps(load_field_observations(self.root))
-        for forbidden in ["latitude", "longitude", "37.1", "secret private text", "/Volumes/private"]:
+        for forbidden in ["latitude", "longitude", "37.123456789", "secret private text", "/Volumes/private"]:
             self.assertNotIn(forbidden, output)
 
     def test_malformed_active_evidence_fails_closed(self):
@@ -136,3 +136,33 @@ class FieldObservationTests(unittest.TestCase):
 
     def test_import_is_deterministic(self):
         self.assertEqual(load_field_observations(self.root), load_field_observations(self.root))
+
+    def test_operator_confirmation_is_scoped_to_exact_observation_ids(self):
+        reviews = self.root / "reviews"
+        reviews.mkdir()
+        (reviews / "field_location_reviews.json").write_text(json.dumps({
+            "schema": "ufo-files-field-location-reviews/v1", "reviews": [{
+                "id": "confirmed", "method": "station_operator_confirmation",
+                "county": "San Mateo", "state": "CA", "country": "USA",
+                "observationIds": [self.record["id"]]}]}))
+        self.record["location"] = {"status": "unknown", "precision": "county"}
+        self.save()
+        graph = load_field_observations(self.root, review_data_dir=reviews)
+        edge = next(e for e in graph["edges"] if e["relation"] == "located_in")
+        self.assertEqual(edge["locationSource"], "station_operator_confirmation")
+        self.assertEqual(len(edge["locationReviewSha256"]), 64)
+        self.path.unlink()
+        self.record["capture_event_id"] = "9" * 32
+        self.record["id"] = "field:station-1:" + "9" * 32
+        self.path = self.path.parent / ("9" * 32 + ".json")
+        self.save()
+        future = load_field_observations(self.root, review_data_dir=reviews)
+        self.assertFalse(any(e["relation"] == "located_in" for e in future["edges"]))
+
+    def test_confirmed_region_keeps_county_geometry_separate_from_station(self):
+        graph = load_field_observations(self.root)
+        self.assertEqual(graph["regions"][0]["geoid"], "06081")
+        self.assertIn(graph["regions"][0]["geometry"]["type"], ["Polygon", "MultiPolygon"])
+        station = next(n for n in graph["nodes"] if n["type"] == "station")
+        self.assertNotIn("lat", station)
+        self.assertNotIn("lon", station)
