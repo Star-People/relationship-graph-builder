@@ -147,7 +147,7 @@ jobs:
       - name: Check out homepage
         uses: actions/checkout@v7
         with:
-          repository: Star-People/homepage
+          repository: starpeopleai/homepage
           ref: main
           path: _homepage
           fetch-depth: 0

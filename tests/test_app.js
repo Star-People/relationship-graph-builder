@@ -263,7 +263,7 @@ test("Programs dates every visible row and keeps unreviewed corpus candidates pe
     name: "Retained historical review",
     disposition: "not_program",
     rationale: "Retained review records do not count as current corpus candidates.",
-    sources: [{ title: "UFO Files review record", url: "https://github.com/Star-People/relationship-graph-builder" }]
+    sources: [{ title: "UFO Files review record", url: "https://github.com/starpeopleai/ufo-files" }]
   });
   context.staleReviewFixture = staleReviewFixture;
   const staleReviewResult = JSON.parse(vm.runInContext(`JSON.stringify(programCatalogWithCorpus(staleReviewFixture, catalogFixture))`, context));
@@ -2864,7 +2864,7 @@ test("Documents provides a searchable finder linked to immutable machine-data so
     icon: "<path d='M7 2h12l5 5v11H7zM19 2v5h5M11 11h9M11 14h9'/><path d='M4 5H2v15h17v-2'/>"
   });
   assert.equal(result.title, "Document Finder");
-  assert.equal(result.url, "https://github.com/Star-People/machine-data/blob/abc123/Collection%20A/pdfs/a%20file.txt");
+  assert.equal(result.url, "https://github.com/starpeopleai/machine-data/blob/abc123/Collection%20A/pdfs/a%20file.txt");
   assert.match(source, /document: \{ size: "words", color: "source", labels: "top", documentSearch: "" \}/);
   assert.match(source, /Search title, path, collection, or format/);
   assert.match(source, /const batch = matching\.slice\(shown, shown \+ 100\)/);
@@ -3581,7 +3581,7 @@ test("all graph types export a presentation PDF with UFO Files provenance", () =
   assert.match(html, /vendor\/jspdf\.umd\.min\.js[\s\S]*vendor\/svg2pdf\.umd\.min\.js[\s\S]*vendor\/qrcode-generator\.js[\s\S]*app\.js/);
   assert.doesNotMatch(html, /html2canvas/i);
   assert.match(source, /const UFO_FILES_URL = "https:\/\/ufo-files\.app"/);
-  assert.match(source, /const UFO_FILES_GITHUB_URL = "https:\/\/github\.com\/Star-People"/);
+  assert.match(source, /const UFO_FILES_GITHUB_URL = "https:\/\/github\.com\/starpeopleai"/);
   assert.match(source, /const GRAPH_BUILDER_URL = "https:\/\/data\.starpeople\.ai\/"/);
   assert.match(source, /\["CATALOG GENERATED", generatedAt\]/);
   assert.match(source, /\["SOURCE REVISION", revision\]/);
@@ -3749,7 +3749,7 @@ test("shared public dossiers resolve embedded Craft classes with labels and immu
   assert.equal(result.record.id, "craft-class-egg");
   assert.equal(result.record.label, "Egg");
   assert.ok(result.record.sourceLinks.length > 0);
-  assert.ok(result.record.sourceLinks.every(link => /^https:\/\/github\.com\/Star-People\/machine-data\/blob\//.test(link.url)));
+  assert.ok(result.record.sourceLinks.every(link => /^https:\/\/github\.com\/starpeopleai\/machine-data\/blob\//.test(link.url)));
 });
 
 test("Craft dossier records retain their displayed class label", () => {
@@ -3948,7 +3948,7 @@ test("dossier import validation rejects versions and reports stale stable IDs", 
   vm.runInContext(source, context);
   const result = JSON.parse(vm.runInContext(`JSON.stringify((() => {
     const dossier = emptyDossier({ input: { revision: "old" } }, {}, "2026-01-02T00:00:00Z");
-    dossier.records.documents.push({ id: "present", label: "Present", stance: "supporting", addedAt: "2026-01-02T00:00:00Z", sourceLinks: [{ documentId: "present", url: "https://github.com/Star-People/machine-data/blob/old/present.txt" }] });
+    dossier.records.documents.push({ id: "present", label: "Present", stance: "supporting", addedAt: "2026-01-02T00:00:00Z", sourceLinks: [{ documentId: "present", url: "https://github.com/starpeopleai/machine-data/blob/old/present.txt" }] });
     dossier.records.entities.push({ id: "removed", label: "Removed", stance: "context", addedAt: "2026-01-02T00:00:00Z", sourceLinks: [] });
     const catalog = { documents: [{ id: "present" }], events: [], entities: [], edges: [], sources: [] };
     const wrongVersion = { ...dossier, schema: "ufo-files-case-dossier/v2" };
@@ -3966,7 +3966,7 @@ test("dossier import validation rejects versions and reports stale stable IDs", 
   assert.deepEqual(result.missing, [{ type: "entities", id: "removed", label: "Removed" }]);
   assert.equal(result.exported.catalog.revision, "old");
   assert.equal(result.exported.records.documents[0].id, "present");
-  assert.equal(result.exported.records.documents[0].sourceLinks[0].url, "https://github.com/Star-People/machine-data/blob/old/present.txt");
+  assert.equal(result.exported.records.documents[0].sourceLinks[0].url, "https://github.com/starpeopleai/machine-data/blob/old/present.txt");
 });
 
 test("loaded dossier graph configurations are normalized before rendering", () => {
@@ -4014,8 +4014,8 @@ test("dossier imports reject untrusted source-link schemes and hosts", () => {
       javascript: validateWith("javascript:alert(1)"),
       lookalike: validateWith("https://github.com.evil.test/ufo-files/machine-data/blob/rev/doc.txt"),
       legacy: validateWith("https://github.com/ufo-files/machine-data/blob/rev/doc.txt"),
-      wrongRepo: validateWith("https://github.com/Star-People/not-machine-data/blob/rev/doc.txt"),
-      trusted: validateWith("https://github.com/Star-People/machine-data/blob/rev/doc.txt")
+      wrongRepo: validateWith("https://github.com/starpeopleai/not-machine-data/blob/rev/doc.txt"),
+      trusted: validateWith("https://github.com/starpeopleai/machine-data/blob/rev/doc.txt")
     };
   })())`, context));
 
@@ -4087,7 +4087,7 @@ test("dossier reports are deterministic, neutral, source-linked, and revision-sp
   const reports = JSON.parse(vm.runInContext(`JSON.stringify((() => {
     const dossier = emptyDossier({ schema: "catalog/v1", generatedAt: "2026-01-01T00:00:00Z", input: { repository: "ufo-files/machine-data", revision: "fixed-revision" } }, { type: "timeline", limit: 12 }, "2026-01-02T00:00:00Z");
     dossier.researchQuestion = "What does the selected record establish?";
-    dossier.records.events.push({ id: "event-b", label: "Selected event", stance: "supporting", addedAt: "2026-01-02T00:00:00Z", sourceLinks: [{ documentId: "doc-a", url: "https://github.com/Star-People/machine-data/blob/fixed-revision/doc-a.txt" }] });
+    dossier.records.events.push({ id: "event-b", label: "Selected event", stance: "supporting", addedAt: "2026-01-02T00:00:00Z", sourceLinks: [{ documentId: "doc-a", url: "https://github.com/starpeopleai/machine-data/blob/fixed-revision/doc-a.txt" }] });
     dossier.records.entities.push({ id: "entity-a", label: "Selected entity", stance: "context", addedAt: "2026-01-02T00:00:00Z", sourceLinks: [] });
     dossier.annotations.followUpTasks = ["Compare independent source records."];
     return [dossierReport(dossier), dossierReport(dossier)];
@@ -4096,7 +4096,7 @@ test("dossier reports are deterministic, neutral, source-linked, and revision-sp
   assert.equal(reports[0], reports[1]);
   assert.match(reports[0], /neutrally lists public catalog records selected by an analyst/i);
   assert.match(reports[0], /Selection and classification do not establish the accuracy/i);
-  assert.match(reports[0], /\[Selected event\]\(https:\/\/github\.com\/Star-People\/machine-data\/blob\/fixed-revision\/doc-a\.txt\)/);
+  assert.match(reports[0], /\[Selected event\]\(https:\/\/github\.com\/starpeopleai\/machine-data\/blob\/fixed-revision\/doc-a\.txt\)/);
   assert.match(reports[0], /Source revision: `fixed-revision`/);
   assert.match(reports[0], /Selected entity — Entity; stable ID/);
   assert.doesNotMatch(reports[0], /— Entitie;/);
@@ -4677,7 +4677,7 @@ test("Craft filters preserve measurement availability and dossier-stable class i
   assert.equal(result.widthN, 1);
   assert.equal(result.heightN, 1);
   assert.equal(result.record.id, "craft-class-disc");
-  assert.match(result.record.sourceLinks[0].url, /Star-People\/machine-data\/blob\/rev\/Example\/report\.txt/);
+  assert.match(result.record.sourceLinks[0].url, /starpeopleai\/machine-data\/blob\/rev\/Example\/report\.txt/);
 });
 
 test("coverage cells distinguish sparse, unknown, zero, and filtered denominators", () => {

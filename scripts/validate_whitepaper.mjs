@@ -64,8 +64,8 @@ for (const claim of paper.claimLedger || []) {
 for (const [id, source] of Object.entries(paper.sources)) {
   assert.equal(source.id, id); assert(usedSources.has(id), `Unused source ${id}`);
   assert.match(source.transcriptSha256, /^[a-f0-9]{64}$/);
-  const expectedUrl = `https://github.com/Star-People/machine-data/blob/${paper.corpusRevision}/${source.path}`;
-  assert.equal(source.url.replace(/^https:\/\/github\.com\/ufo-files\/machine-data\//, "https://github.com/Star-People/machine-data/"), expectedUrl);
+  const expectedUrl = `https://github.com/starpeopleai/machine-data/blob/${paper.corpusRevision}/${source.path}`;
+  assert.equal(source.url.replace(/^https:\/\/github\.com\/ufo-files\/machine-data\//, "https://github.com/starpeopleai/machine-data/"), expectedUrl);
   assert(!source.path.split('/').includes('..'));
   if (!corpusRoot) continue;
   const bytes = await readFile(resolve(corpusRoot, source.path));

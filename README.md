@@ -212,7 +212,7 @@ Scatter plots, maps, and entity timelines can add a deduplicated relationship la
 
 Entities are a global data role: they can be network nodes, a Scatter axis, the Bar dimension, Timeline marks, Matrix columns, or Table rows. Network nodes can also be collections, connected by the published entities they share. The Table type also builds custom lists of transcript files and collections with selectable columns, sorting, search, row limits, and evidence inspection. Entity-backed views share the same category, confidence, collection, evidence, label, and publication controls.
 
-Every graph type except Triage exports the same presentation-ready PDF as a one-click download; Triage exports its ranked queue as CSV. The PDF's branded letter-sized cover uses the graph builder's logo and IBM Plex Mono typography, places `ufo-files.app` and `github.com/ufo-files` inline in the header, and identifies the graph title and type, export time, catalog generation time, and machine-data repository and revision. The cover title preserves a custom title supplied by the user, while the View metadata always uses the system-generated name for the active graph configuration. A Graph URL field pairs a full clickable canonical `https://data.starpeople.ai/` URL with a vector QR code that deep-links to the exact graph configuration captured by the export; default-valued settings are omitted from the URL and restored when it opens. If an unusually large configuration exceeds QR capacity, the full link remains available and PDF generation continues. A readable property section records every filter, encoding, relationship, and limit that applies to the active graph. The following letter-sized page fits the complete presentation stage within the page without cropping or stretching—title, subtitle, graph or table, visible relationship layer, legend, result summary, and evidence-policy detail—on a white background and without interactive controls. The page orientation follows the responsive stage, while the graph retains its live aspect ratio and computed relationship styling. Cover text, metadata, QR code, and SVG graph marks remain sharp vector content; WebGL map pixels remain raster by nature. A PDF-only footer repeats UFO Files provenance, catalog and export timestamps, and the exact machine-data repository revision on the graph page.
+Every graph type except Triage exports the same presentation-ready PDF as a one-click download; Triage exports its ranked queue as CSV. The PDF's branded letter-sized cover uses the graph builder's logo and IBM Plex Mono typography, places `ufo-files.app` and `github.com/ufo-files` inline in the header, and identifies the graph title and type, export time, catalog generation time, and machine-data repository and revision. The cover title preserves a custom title supplied by the user, while the View metadata always uses the system-generated name for the active graph configuration. A Graph URL field pairs a full clickable canonical `https://files.starpeople.ai/` URL with a vector QR code that deep-links to the exact graph configuration captured by the export; default-valued settings are omitted from the URL and restored when it opens. If an unusually large configuration exceeds QR capacity, the full link remains available and PDF generation continues. A readable property section records every filter, encoding, relationship, and limit that applies to the active graph. The following letter-sized page fits the complete presentation stage within the page without cropping or stretching—title, subtitle, graph or table, visible relationship layer, legend, result summary, and evidence-policy detail—on a white background and without interactive controls. The page orientation follows the responsive stage, while the graph retains its live aspect ratio and computed relationship styling. Cover text, metadata, QR code, and SVG graph marks remain sharp vector content; WebGL map pixels remain raster by nature. A PDF-only footer repeats UFO Files provenance, catalog and export timestamps, and the exact machine-data repository revision on the graph page.
 
 The Book type is a contiguous area view of titles explicitly identified in transcript text. The leading title keeps an upright 2:3 book-cover shape, while the remaining mention-weighted blocks flex to fill all available chart space. Their proportions favor near-square blocks for short titles and progressively wider blocks for longer titles so serif cover text wraps legibly. Title type scales with cell area, and cells too small for a complete title remain tooltip-only; shade is controlled independently by the selected prominence metric. Titles are extracted only from book, novel, or memoir cues; each mark opens its source evidence in the inspector.
 
@@ -317,11 +317,11 @@ Open <http://localhost:4173>.
 ## Rebuild the catalog
 
 The deployed catalog is built from the public
-[`Star-People/machine-data`](https://github.com/Star-People/machine-data) repository.
+[`starpeopleai/machine-data`](https://github.com/starpeopleai/machine-data) repository.
 For a local rebuild, clone that repository and pass its path to the builder:
 
 ```sh
-git clone https://github.com/Star-People/machine-data.git /tmp/ufo-files-machine-data
+git clone https://github.com/starpeopleai/machine-data.git /tmp/ufo-files-machine-data
 python3 scripts/build_catalog.py --input /tmp/ufo-files-machine-data
 ```
 
@@ -383,7 +383,7 @@ paired-language readers as the full catalog:
 
 ```sh
 python3 scripts/build_topic_mentions.py --input ../machine-data \
-  --input-repository Star-People/machine-data --input-revision <commit> \
+  --input-repository starpeopleai/machine-data --input-revision <commit> \
   --paired-language en --require-data
 ```
 
@@ -407,7 +407,7 @@ For a clock-only rebuild using the same ingestion and paired-language rules:
 
 ```sh
 python3 scripts/build_clock_times.py --input ../machine-data \
-  --input-repository Star-People/machine-data --input-revision <commit> \
+  --input-repository starpeopleai/machine-data --input-revision <commit> \
   --paired-language en --require-data
 ```
 
@@ -423,7 +423,7 @@ For GitHub Pages, publish this directory as the site root. `.nojekyll` is includ
 
 ## Automatic updates
 
-Every push to `Star-People/machine-data` updates `.machine-data-revision` through a
+Every push to `starpeopleai/machine-data` updates `.machine-data-revision` through a
 builder-scoped deploy key. That rebuild request immediately starts the `Rebuild
 graph from machine-data` workflow, which rebuilds and tests the catalog, records
 the exact machine-data commit in the catalog metadata, commits the refreshed
