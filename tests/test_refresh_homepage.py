@@ -11,17 +11,17 @@ class HomepageRefreshTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / 'index.html').write_text('original homepage')
-            refresh(root, 'a' * 40, 'c' * 40, 'https://github.com/ufo-files/relationship-graph-builder/actions/runs/123')
+            refresh(root, 'a' * 40, 'c' * 40, 'https://github.com/Star-People/relationship-graph-builder/actions/runs/123')
             snapshot = (root / 'data/graph-refresh-request.json').read_text()
             self.assertEqual(json.loads(snapshot), {
                 'graphRevision': 'a' * 40, 'machineDataRevision': 'c' * 40,
-                'screenshotRun': 'https://github.com/ufo-files/relationship-graph-builder/actions/runs/123'})
+                'screenshotRun': 'https://github.com/Star-People/relationship-graph-builder/actions/runs/123'})
             self.assertEqual((root / 'index.html').read_text(), 'original homepage')
-            refresh(root, 'a' * 40, 'c' * 40, 'https://github.com/ufo-files/relationship-graph-builder/actions/runs/123')
+            refresh(root, 'a' * 40, 'c' * 40, 'https://github.com/Star-People/relationship-graph-builder/actions/runs/123')
             self.assertEqual((root / 'data/graph-refresh-request.json').read_text(), snapshot)
 
     def test_invalid_snapshot_does_not_write_a_request(self):
-        for revision, url in [('main', 'https://github.com/ufo-files/relationship-graph-builder/actions/runs/123'),
+        for revision, url in [('main', 'https://github.com/Star-People/relationship-graph-builder/actions/runs/123'),
                               ('a' * 40, 'https://example.com/untrusted')]:
             with self.subTest(revision=revision), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)

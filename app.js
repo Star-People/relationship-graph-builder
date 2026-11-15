@@ -6534,7 +6534,7 @@ function inspectMatrix(item) {
 
 const UFO_FILES_URL = "https://ufo-files.app";
 const UFO_FILES_GITHUB_URL = "https://github.com/ufo-files";
-const GRAPH_BUILDER_URL = "https://ufo-files.github.io/relationship-graph-builder/";
+const GRAPH_BUILDER_URL = "https://data.starpeople.ai/";
 
 function triageConfigurationExport(config = state.config) {
   return {

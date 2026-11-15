@@ -64,7 +64,7 @@ for (const claim of paper.claimLedger || []) {
 for (const [id, source] of Object.entries(paper.sources)) {
   assert.equal(source.id, id); assert(usedSources.has(id), `Unused source ${id}`);
   assert.match(source.transcriptSha256, /^[a-f0-9]{64}$/);
-  const expectedUrl = `https://github.com/ufo-files/machine-data/blob/${paper.corpusRevision}/${source.path}`;
+  const expectedUrl = `https://github.com/Star-People/machine-data/blob/${paper.corpusRevision}/${source.path}`;
   assert.equal(source.url, expectedUrl);
   assert(!source.path.split('/').includes('..'));
   if (!corpusRoot) continue;

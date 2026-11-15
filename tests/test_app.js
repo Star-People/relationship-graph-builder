@@ -263,7 +263,7 @@ test("Programs dates every visible row and keeps unreviewed corpus candidates pe
     name: "Retained historical review",
     disposition: "not_program",
     rationale: "Retained review records do not count as current corpus candidates.",
-    sources: [{ title: "UFO Files review record", url: "https://github.com/ufo-files/relationship-graph-builder" }]
+    sources: [{ title: "UFO Files review record", url: "https://github.com/Star-People/relationship-graph-builder" }]
   });
   context.staleReviewFixture = staleReviewFixture;
   const staleReviewResult = JSON.parse(vm.runInContext(`JSON.stringify(programCatalogWithCorpus(staleReviewFixture, catalogFixture))`, context));
@@ -2864,7 +2864,7 @@ test("Documents provides a searchable finder linked to immutable machine-data so
     icon: "<path d='M7 2h12l5 5v11H7zM19 2v5h5M11 11h9M11 14h9'/><path d='M4 5H2v15h17v-2'/>"
   });
   assert.equal(result.title, "Document Finder");
-  assert.equal(result.url, "https://github.com/ufo-files/machine-data/blob/abc123/Collection%20A/pdfs/a%20file.txt");
+  assert.equal(result.url, "https://github.com/Star-People/machine-data/blob/abc123/Collection%20A/pdfs/a%20file.txt");
   assert.match(source, /document: \{ size: "words", color: "source", labels: "top", documentSearch: "" \}/);
   assert.match(source, /Search title, path, collection, or format/);
   assert.match(source, /const batch = matching\.slice\(shown, shown \+ 100\)/);
@@ -3948,7 +3948,7 @@ test("dossier import validation rejects versions and reports stale stable IDs", 
   vm.runInContext(source, context);
   const result = JSON.parse(vm.runInContext(`JSON.stringify((() => {
     const dossier = emptyDossier({ input: { revision: "old" } }, {}, "2026-01-02T00:00:00Z");
-    dossier.records.documents.push({ id: "present", label: "Present", stance: "supporting", addedAt: "2026-01-02T00:00:00Z", sourceLinks: [{ documentId: "present", url: "https://github.com/ufo-files/machine-data/blob/old/present.txt" }] });
+    dossier.records.documents.push({ id: "present", label: "Present", stance: "supporting", addedAt: "2026-01-02T00:00:00Z", sourceLinks: [{ documentId: "present", url: "https://github.com/Star-People/machine-data/blob/old/present.txt" }] });
     dossier.records.entities.push({ id: "removed", label: "Removed", stance: "context", addedAt: "2026-01-02T00:00:00Z", sourceLinks: [] });
     const catalog = { documents: [{ id: "present" }], events: [], entities: [], edges: [], sources: [] };
     const wrongVersion = { ...dossier, schema: "ufo-files-case-dossier/v2" };
@@ -3966,7 +3966,7 @@ test("dossier import validation rejects versions and reports stale stable IDs", 
   assert.deepEqual(result.missing, [{ type: "entities", id: "removed", label: "Removed" }]);
   assert.equal(result.exported.catalog.revision, "old");
   assert.equal(result.exported.records.documents[0].id, "present");
-  assert.equal(result.exported.records.documents[0].sourceLinks[0].url, "https://github.com/ufo-files/machine-data/blob/old/present.txt");
+  assert.equal(result.exported.records.documents[0].sourceLinks[0].url, "https://github.com/Star-People/machine-data/blob/old/present.txt");
 });
 
 test("loaded dossier graph configurations are normalized before rendering", () => {
@@ -4013,7 +4013,7 @@ test("dossier imports reject untrusted source-link schemes and hosts", () => {
     return {
       javascript: validateWith("javascript:alert(1)"),
       lookalike: validateWith("https://github.com.evil.test/ufo-files/machine-data/blob/rev/doc.txt"),
-      trusted: validateWith("https://github.com/ufo-files/machine-data/blob/rev/doc.txt")
+      trusted: validateWith("https://github.com/Star-People/machine-data/blob/rev/doc.txt")
     };
   })())`, context));
 
@@ -4083,7 +4083,7 @@ test("dossier reports are deterministic, neutral, source-linked, and revision-sp
   const reports = JSON.parse(vm.runInContext(`JSON.stringify((() => {
     const dossier = emptyDossier({ schema: "catalog/v1", generatedAt: "2026-01-01T00:00:00Z", input: { repository: "ufo-files/machine-data", revision: "fixed-revision" } }, { type: "timeline", limit: 12 }, "2026-01-02T00:00:00Z");
     dossier.researchQuestion = "What does the selected record establish?";
-    dossier.records.events.push({ id: "event-b", label: "Selected event", stance: "supporting", addedAt: "2026-01-02T00:00:00Z", sourceLinks: [{ documentId: "doc-a", url: "https://github.com/ufo-files/machine-data/blob/fixed-revision/doc-a.txt" }] });
+    dossier.records.events.push({ id: "event-b", label: "Selected event", stance: "supporting", addedAt: "2026-01-02T00:00:00Z", sourceLinks: [{ documentId: "doc-a", url: "https://github.com/Star-People/machine-data/blob/fixed-revision/doc-a.txt" }] });
     dossier.records.entities.push({ id: "entity-a", label: "Selected entity", stance: "context", addedAt: "2026-01-02T00:00:00Z", sourceLinks: [] });
     dossier.annotations.followUpTasks = ["Compare independent source records."];
     return [dossierReport(dossier), dossierReport(dossier)];
