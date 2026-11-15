@@ -823,7 +823,7 @@ function dossierCatalogSnapshot(catalog = state.catalog) {
   return {
     schema: catalog?.schema || "Not recorded",
     generatedAt: catalog?.generatedAt || "Not recorded",
-    repository: catalog?.input?.repository || "ufo-files/machine-data",
+    repository: catalog?.input?.repository || "starpeopleai/machine-data",
     revision: catalog?.input?.revision || "Not recorded"
   };
 }
@@ -861,7 +861,7 @@ function emptyDossier(catalog = state.catalog, config = state.config, timestamp 
 function trustedDossierSourceURL(value) {
   try {
     const url = new URL(value);
-    return url.origin === "https://github.com" && /^\/ufo-files\/machine-data\/blob\/[^/]+\/.+/.test(url.pathname);
+    return url.origin === "https://github.com" && /^\/(?:ufo-files|Star-People|starpeopleai)\/machine-data\/blob\/[^/]+\/.+/.test(url.pathname);
   } catch (_) {
     return false;
   }
@@ -2781,7 +2781,8 @@ function renderBook() {
 }
 
 function machineDataPathURL(pathValue, input = state.catalog?.input || {}) {
-  const repository = input.repository || "ufo-files/machine-data";
+  const repository = !input.repository || ["ufo-files/machine-data", "Star-People/machine-data"].includes(input.repository)
+    ? "starpeopleai/machine-data" : input.repository;
   const revision = input.revision || "main";
   const path = String(pathValue || "").split("/").map(encodeURIComponent).join("/");
   return `https://github.com/${repository}/blob/${encodeURIComponent(revision)}/${path}`;
@@ -6533,8 +6534,8 @@ function inspectMatrix(item) {
 }
 
 const UFO_FILES_URL = "https://ufo-files.app";
-const UFO_FILES_GITHUB_URL = "https://github.com/ufo-files";
-const GRAPH_BUILDER_URL = "https://ufo-files.github.io/relationship-graph-builder/";
+const UFO_FILES_GITHUB_URL = "https://github.com/starpeopleai";
+const GRAPH_BUILDER_URL = "https://files.starpeople.ai/";
 
 function triageConfigurationExport(config = state.config) {
   return {
@@ -6628,7 +6629,7 @@ function pdfFilename(title) {
 function pdfProvenance(exportedAt) {
   const input = state.catalog.input || {};
   const revision = input.revision || "Not recorded";
-  const repository = input.repository || "ufo-files/machine-data";
+  const repository = input.repository || "starpeopleai/machine-data";
   const generatedAt = state.catalog.generatedAt ? new Date(state.catalog.generatedAt).toISOString() : "Not recorded";
   return [
     ["VIEW", dataAwareTitle(state.config)],
@@ -6967,7 +6968,7 @@ function addPDFCover(pdf, exportedAt, deepLink, code, logoPath) {
   pdf.setFillColor(0); pdf.setLineWidth(logo.strokeWidth); pdf.path(logo.operations); pdf.fillStroke();
   setPDFFont(pdf, 13, true); pdf.text("UFO FILES", 99, 62);
   setPDFFont(pdf, 9); pdf.text("RELATIONSHIP GRAPH EXPORT", 99, 77);
-  setPDFFont(pdf, 7.5, true); pdf.textWithLink("ufo-files.app", 99, 94, { url: UFO_FILES_URL }); pdf.textWithLink("github.com/ufo-files", 171, 94, { url: UFO_FILES_GITHUB_URL });
+  setPDFFont(pdf, 7.5, true); pdf.textWithLink("ufo-files.app", 99, 94, { url: UFO_FILES_URL }); pdf.textWithLink("github.com/starpeopleai", 171, 94, { url: UFO_FILES_GITHUB_URL });
   pdf.setLineWidth(1.5); pdf.line(48, 116, 564, 116);
   setPDFFont(pdf, 25.5); const titleLines = pdf.splitTextToSize(pdfExportTitle().toUpperCase(), 516).slice(0, 2); pdf.text(titleLines, 48, 157, { lineHeightFactor: 1.15 });
   const summaryY = 199 + Math.max(0, titleLines.length - 1) * 27;

@@ -72,7 +72,7 @@ jobs:
       - name: Pin machine-data for every build stage
         id: input
         run: |
-          revision="$(git ls-remote https://github.com/ufo-files/machine-data.git refs/heads/main | cut -f1)"
+          revision="$(git ls-remote https://github.com/starpeopleai/machine-data.git refs/heads/main | cut -f1)"
           test -n "$revision"
           echo "revision=$revision" >> "$GITHUB_OUTPUT"
 
@@ -184,7 +184,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-          repository: ufo-files/machine-data
+          repository: starpeopleai/machine-data
           path: _machine-data
           sparse-checkout: ${{ matrix.source }}
 
@@ -204,7 +204,7 @@ jobs:
           revision="$(git -C _machine-data rev-parse HEAD)"
           python3 scripts/build_catalog.py \
             --input _source-input \
-            --input-repository ufo-files/machine-data \
+            --input-repository starpeopleai/machine-data \
             --input-revision "$revision" \
             --paired-language en \
             --workers 2 \
@@ -298,7 +298,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-          repository: ufo-files/machine-data
+          repository: starpeopleai/machine-data
           ref: ${{ needs.changes.outputs.input_revision }}
           path: _machine-data
       - uses: actions/setup-python@v7
@@ -364,7 +364,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-          repository: ufo-files/machine-data
+          repository: starpeopleai/machine-data
           ref: ${{ needs.changes.outputs.input_revision }}
           path: _machine-data
 
@@ -405,7 +405,7 @@ jobs:
             --property=TimeoutStopSec=30 \
             "$(command -v python3)" scripts/build_catalog.py \
             --input _machine-data \
-            --input-repository ufo-files/machine-data \
+            --input-repository starpeopleai/machine-data \
             --input-revision "$revision" \
             --paired-language en \
             --workers 1 \
@@ -486,7 +486,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-          repository: ufo-files/machine-data
+          repository: starpeopleai/machine-data
           ref: ${{ needs.changes.outputs.input_revision }}
           path: _machine-data
 
@@ -527,7 +527,7 @@ jobs:
             --property=TimeoutStopSec=30 \
             "$(command -v python3)" scripts/build_catalog.py \
             --input _machine-data \
-            --input-repository ufo-files/machine-data \
+            --input-repository starpeopleai/machine-data \
             --input-revision "$revision" \
             --paired-language en \
             --workers 1 \

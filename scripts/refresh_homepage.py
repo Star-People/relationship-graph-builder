@@ -11,7 +11,7 @@ def refresh(root: Path, revision: str, input_revision: str, run_url: str) -> Non
     for value in (revision, input_revision):
         if not re.fullmatch(r"[0-9a-f]{40}", value):
             raise ValueError("Snapshot revisions must be full lowercase Git SHAs")
-    if not re.fullmatch(r"https://github.com/ufo-files/relationship-graph-builder/actions/runs/\d+", run_url):
+    if not re.fullmatch(r"https://github.com/starpeopleai/ufo-files/actions/runs/\d+", run_url):
         raise ValueError("Snapshot must identify a graph screenshot workflow run")
     snapshot = {"graphRevision": revision, "machineDataRevision": input_revision,
                 "screenshotRun": run_url}
