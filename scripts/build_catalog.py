@@ -30,10 +30,12 @@ from typing import Iterable
 
 
 try:
+    from .field_observations import load_field_observations
     from .extraction_runtime import extraction_fingerprint, iter_extracted_documents
     from .time_mentions import time_observations_for_segment
     from .topic_mentions import TOPICS, topic_observations_for_segment, write_topic_catalogs
 except ImportError:
+    from field_observations import load_field_observations
     from extraction_runtime import extraction_fingerprint, iter_extracted_documents
     from time_mentions import time_observations_for_segment
     from topic_mentions import TOPICS, topic_observations_for_segment, write_topic_catalogs
@@ -4361,6 +4363,7 @@ def build(
         catalog_input["repository"] = input_repository
     if input_revision:
         catalog_input["revision"] = input_revision
+    field_observations = load_field_observations(input_root)
     catalog = {
         "schema": SCHEMA,
         "generatedAt": utc_now(),
@@ -4395,6 +4398,8 @@ def build(
             "maxEdges": max_edges,
         },
         "counts": {
+            "fieldObservations": field_observations["counts"]["observations"],
+            "fieldReviewedObjects": field_observations["counts"]["reviewedObjects"],
             "documents": len(documents),
             "sources": len(sources),
             "candidateEntities": candidate_count,
@@ -4443,6 +4448,7 @@ def build(
             "inferredSourceFamilies": sum(1 for family in source_families if family["status"] == "inferred"),
             "unknownSourceFamilies": sum(1 for family in source_families if family["status"] == "unknown"),
         },
+        "fieldObservations": field_observations,
         "sources": sources,
         "documents": documents,
         "sourceFamilies": source_families,
@@ -4690,7 +4696,7 @@ def write_catalog_section_shards(catalog: dict, data_dir: Path,
     shard_dir.mkdir(parents=True, exist_ok=True)
     published = dict(catalog)
     manifest, expected = [], set()
-    for section in ("coverage", "astronomy", "craft", "species", "signals", "bloodTypes"):
+    for section in ("coverage", "astronomy", "craft", "species", "signals", "bloodTypes", "fieldObservations"):
         original = catalog.get(section)
         if not isinstance(original, dict):
             continue
