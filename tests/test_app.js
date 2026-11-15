@@ -176,7 +176,7 @@ test("Galactic Entities boots from a compact astronomy payload", () => {
   assert.match(source, /state\.publicDossierPayload \|\| publicDossierPayloadFromHash\(\)/);
   assert.match(source, /requestId === null \|\| requestId === state\.typeRequestId\) showCatalogError/);
   assert.match(source, /async function openDossierDialog\(\)[\s\S]*ensureFullCatalog\(\)[\s\S]*initializeDossier\(\)/);
-  assert.match(html, /app\.js\?v=field-views-v1/);
+  assert.match(html, /app\.js\?v=field-source-bars-v1/);
   assert.match(html, /map-globe\.js\?v=field-views-v1/);
   assert.match(html, /solar-system\.js\?v=astronomy-renderer-v2/);
   assert.match(fs.readFileSync("solar-system.js", "utf8"), /three\.module\.min\.js\?v=astronomy-renderer-v2/);
@@ -5228,4 +5228,35 @@ test("clock loader reassembles shards, retries failures, and retains inline comp
   delete manifest.parts;
   manifest.documents = documents; manifest.observations = observations;
   assert.equal((await context.ensureClockCatalog()).observations.length, 150000);
+});
+
+test("Field Station source bars count observations without inventing transcript metrics", () => {
+  const elements = Object.fromEntries(["chart", "chartWrap", "tableView", "legend", "resultSummary", "graphKicker", "policySummary"].map(id => [id,new FakeElement()]));
+  const document = {createElementNS:()=>new FakeElement(), querySelector:selector=>elements[selector.slice(1)],querySelectorAll:()=>[]};
+  const context=vm.createContext({document,location:{hash:""},URLSearchParams});
+  vm.runInContext(fs.readFileSync("app.js","utf8").split("$$('.step-heading')")[0],context);
+  vm.runInContext(`
+    state.catalog={counts:{documents:1},documents:[{id:"d",source:"Archive",words:100,bytes:1000}],sources:[{name:"Archive"}],fieldObservations:{observations:[{id:"one"},{id:"two"},{id:"one"}]}};
+    Object.assign(state.config,{type:"bars",aggregation:"source",y:"records",allSources:true,limit:50});
+    renderBars();
+  `,context);
+  const rows=JSON.parse(vm.runInContext("JSON.stringify(aggregateDocuments())",context));
+  assert.equal(rows.find(r=>r.name==="Archive").records,1);
+  const field=rows.find(r=>r.name==="Field Station");
+  assert.equal(field.records,2);
+  assert.equal(field.documents,null);assert.equal(field.words,null);assert.equal(field.bytes,null);
+  const marks=elements.chart.children.filter(n=>n.attributes.class==="mark");
+  assert.equal(marks.length,2);
+  assert.equal(marks[0].attributes["aria-label"],"Field Station · 2 Records");
+  assert.equal(typeof marks[0].listeners.keydown,"function");
+  elements.chart.children=[];
+  vm.runInContext('state.config.y="words";renderBars()',context);
+  const labels=elements.chart.children.filter(n=>n.attributes.class==="axis-label").map(n=>n.textContent);
+  assert.ok(labels.includes("N/A · 2 records"));
+  vm.runInContext('state.config.allSources=false;state.config.sources=["Archive"]',context);
+  assert.equal(vm.runInContext('aggregateDocuments().length',context),1);
+  vm.runInContext('state.config.sources=["Field Station"];state.config.aggregation="format"',context);
+  assert.equal(vm.runInContext('aggregateDocuments().length',context),0);
+  vm.runInContext('state.config.aggregation="source";state.catalog.fieldObservations.observations=[]',context);
+  assert.equal(vm.runInContext('aggregateDocuments().length',context),0);
 });
