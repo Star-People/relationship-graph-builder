@@ -861,7 +861,7 @@ function emptyDossier(catalog = state.catalog, config = state.config, timestamp 
 function trustedDossierSourceURL(value) {
   try {
     const url = new URL(value);
-    return url.origin === "https://github.com" && /^\/(?:ufo-files|starpeopleai)\/machine-data\/blob\/[^/]+\/.+/.test(url.pathname);
+    return url.origin === "https://github.com" && /^\/(?:ufo-files|Star-People|starpeopleai)\/machine-data\/blob\/[^/]+\/.+/.test(url.pathname);
   } catch (_) {
     return false;
   }
@@ -2781,7 +2781,7 @@ function renderBook() {
 }
 
 function machineDataPathURL(pathValue, input = state.catalog?.input || {}) {
-  const repository = !input.repository || input.repository === "ufo-files/machine-data"
+  const repository = !input.repository || ["ufo-files/machine-data", "Star-People/machine-data"].includes(input.repository)
     ? "starpeopleai/machine-data" : input.repository;
   const revision = input.revision || "main";
   const path = String(pathValue || "").split("/").map(encodeURIComponent).join("/");

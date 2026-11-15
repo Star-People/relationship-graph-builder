@@ -3523,7 +3523,7 @@ test("all graph types export a presentation PDF with UFO Files provenance", () =
   context.btoa = value => Buffer.from(value, "binary").toString("base64");
   context.history = { replaceState(_state, _title, value) { context.location.hash = value; } };
   const deepLink = vm.runInContext("currentGraphURL()", context);
-  assert.match(deepLink, /^https:\/\/data\.starpeople\.ai\/#config=/);
+  assert.match(deepLink, /^https:\/\/files\.starpeople\.ai\/#config=/);
   const encodedConfig = decodeURIComponent(new URL(deepLink).hash.split("config=")[1]);
   const savedConfig = JSON.parse(Buffer.from(encodedConfig, "base64").toString("utf8"));
   assert.deepEqual(savedConfig, {
@@ -3582,7 +3582,7 @@ test("all graph types export a presentation PDF with UFO Files provenance", () =
   assert.doesNotMatch(html, /html2canvas/i);
   assert.match(source, /const UFO_FILES_URL = "https:\/\/ufo-files\.app"/);
   assert.match(source, /const UFO_FILES_GITHUB_URL = "https:\/\/github\.com\/starpeopleai"/);
-  assert.match(source, /const GRAPH_BUILDER_URL = "https:\/\/data\.starpeople\.ai\/"/);
+  assert.match(source, /const GRAPH_BUILDER_URL = "https:\/\/files\.starpeople\.ai\/"/);
   assert.match(source, /\["CATALOG GENERATED", generatedAt\]/);
   assert.match(source, /\["SOURCE REVISION", revision\]/);
   assert.match(source, /function currentGraphURL\(\) \{[\s\S]*persistHash\(\)[\s\S]*new URL\(location\.hash, GRAPH_BUILDER_URL\)/);
@@ -4014,6 +4014,7 @@ test("dossier imports reject untrusted source-link schemes and hosts", () => {
       javascript: validateWith("javascript:alert(1)"),
       lookalike: validateWith("https://github.com.evil.test/ufo-files/machine-data/blob/rev/doc.txt"),
       legacy: validateWith("https://github.com/ufo-files/machine-data/blob/rev/doc.txt"),
+      previousOrganization: validateWith("https://github.com/Star-People/machine-data/blob/rev/doc.txt"),
       wrongRepo: validateWith("https://github.com/starpeopleai/not-machine-data/blob/rev/doc.txt"),
       trusted: validateWith("https://github.com/starpeopleai/machine-data/blob/rev/doc.txt")
     };
@@ -4024,6 +4025,7 @@ test("dossier imports reject untrusted source-link schemes and hosts", () => {
   assert.match(result.javascript.errors.join(" "), /trusted HTTPS machine-data source links/);
   assert.equal(result.trusted.valid, true);
   assert.equal(result.legacy.valid, true);
+  assert.equal(result.previousOrganization.valid, true);
   assert.equal(result.wrongRepo.valid, false);
 });
 
