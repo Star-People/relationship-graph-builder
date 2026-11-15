@@ -218,7 +218,7 @@ const LABELS = {
   contextAdjustedMentions: "Mentions", independentDocumentCount: "Documents",
   inflationRate: "Mention adjustment", documentInflationRate: "Potential prominence inflation", inflationRisk: "Prominence inflation risk", inflatedMentionCount: "Adjusted mentions", inflatedDocumentCount: "Adjusted documents", epistemicAdjustedMentions: "Evidence-weighted mentions",
   classificationConfidence: "Classification confidence", extractionConfidence: "Extraction confidence",
-  words: "Words", documents: "Documents", segments: "Segments", bytes: "Source bytes",
+  records: "Records", words: "Words", documents: "Documents", segments: "Segments", bytes: "Source bytes",
   createdAt: "Cataloged at", documentDate: "Document date", startDate: "Event date", confidence: "Confidence", mentionCount: "Event mentions", mentionRank: "Mention rank", eventCount: "Events", durationMs: "Duration", source: "Collection", format: "Format",
   entity: "Entities", document: "Transcript files", name: "Name", title: "Title",
   category: "Entity type", reviewStatus: "Review status", engine: "Engine", path: "Path",
@@ -373,7 +373,7 @@ const VIEW_DEFAULTS = {
   craft: { craftSize: "documentCount", craftColor: "confidence", craftWitnessType: "all", craftDimensions: "all", craftDateFrom: "", craftDateTo: "", craftLocation: "", minConfidence: 0.5, labelSize: 12 },
   species: { speciesLayout: "lineup", speciesY: "physicalHeight", speciesSize: "documentCount", speciesSpacing: 0, speciesCategory: "all", speciesSearch: "", minConfidence: 0.5, labelSize: 12 },
   signals: { allSources: true, sources: [], labels: "top", labelSize: 12 },
-  bars: { aggregation: "source", y: "words", color: "intensity" },
+  bars: { aggregation: "source", y: "records", color: "intensity" },
   timeline: { timelineRole: "event", timelineGrouping: true, timelineGroupPeriod: "month", timelineCorrelativeMarkers: true, timelineHistoricalCandidates: false, x: "startDate", y: "mentionRank", size: "eventCount", color: "eventType", categories: ["date"], labels: "top", limit: 500, relationshipLayer: "always", timelineRelevanceCutoff: DEFAULT_TIMELINE_RELEVANCE_CUTOFF, timelineRecencyYear: DEFAULT_TIMELINE_RECENCY_YEAR },
   drugs: { topicTerm: "all", topicSearch: "", allSources: true, sources: [], labelSize: 12 },
   technologies: { topicTerm: "all", topicSearch: "", allSources: true, sources: [], labelSize: 12 },
@@ -1275,7 +1275,7 @@ function renderControls() {
     roles = controlSelect("x", "X axis", ["entity", ...numericEntity]) + controlSelect("y", "Y axis", numericEntity)
       + relationshipTypeControl();
   } else if (state.config.type === "bars") {
-    roles = controlSelect("aggregation", "Group by", [{ value: "entity", label: "Entities" }, { value: "source", label: "Collection" }, { value: "format", label: "Transcript format" }]) + controlSelect("y", "Measure", state.config.aggregation === "entity" ? numericEntity : ["words", "documents", "bytes"]);
+    roles = controlSelect("aggregation", "Group by", [{ value: "entity", label: "Entities" }, { value: "source", label: "Collection" }, { value: "format", label: "Transcript format" }]) + controlSelect("y", "Measure", state.config.aggregation === "entity" ? numericEntity : state.config.aggregation === "source" ? ["records", "words", "documents", "bytes"] : ["words", "documents", "bytes"]);
   } else if (state.config.type === "timeline") {
     const eventFields = ["mentionRank"];
     roles = controlSelect("timelineRole", "Marks", [{ value: "event", label: "Events + reported sightings" }, { value: "document", label: "Dated source documents" }, { value: "entity", label: "Entities" }])
@@ -1407,7 +1407,7 @@ function renderControls() {
     const checked = state.config.type === "book" ? category === "book" : state.config.type === "document" || state.config.categories.includes(category);
     return `<label class="check-chip"><input type="checkbox" data-category="${category}" ${checked ? "checked" : ""} ${fixedCategories ? "disabled" : ""}><span>${escapeHTML(label(category))}</span></label>`;
   }).join("");
-  const sources = [...(state.catalog?.sources || []), ...(["clock","signals","map"].includes(state.config.type) ? [{name:"Field Station"}] : [])];
+  const sources = [...(state.catalog?.sources || []), ...((["clock","signals","map"].includes(state.config.type) || state.config.type === "bars" && state.config.aggregation === "source") && !(state.catalog?.sources || []).some(source => source.name === "Field Station") ? [{name:"Field Station"}] : [])];
   const sourceNames = sources.map(source => source.name);
   const selectedSourceCount = state.config.allSources ? sourceNames.length : sourceNames.filter(name => state.config.sources.includes(name)).length;
   const sourceChecks = sources.map(source => `<label class="check-chip"><input type="checkbox" data-source="${escapeHTML(source.name)}" ${sourceIsSelected(source.name, state.config.sources, state.config.allSources) ? "checked" : ""}><span>${escapeHTML(source.name)}</span></label>`).join("");
@@ -1656,7 +1656,7 @@ function updateConfig(key, value, rerenderControls = false) {
   if (["x", "size", "y", "tableSort"].includes(key) && CORROBORATION_METRICS.includes(value)) state.config.corroborationMetric = value;
   if (["triageSort", "triageDirection"].includes(key)) state.config.triageCaseId = "";
   if (key === "aggregation") {
-    state.config.y = value === "entity" ? "epistemicAdjustedMentions" : "words";
+    state.config.y = value === "entity" ? "epistemicAdjustedMentions" : value === "source" ? "records" : "words";
     state.config.color = "intensity";
   }
   if (key === "timelineRole") {
@@ -2892,10 +2892,17 @@ function aggregateDocuments() {
       return { name: label(format), source: format, documents: items.length, words: items.reduce((sum, item) => sum + item.words, 0), bytes: items.reduce((sum, item) => sum + item.bytes, 0), documentIds: items.map(item => item.id) };
     });
   }
-  return state.catalog.sources.filter(source => sourceMatches(source.name)).map(source => {
+  const sources = state.catalog.sources.filter(source => sourceMatches(source.name) && source.name !== "Field Station").map(source => {
     const items = docs.filter(doc => doc.source === source.name);
-    return { name: source.name, source: source.name, documents: items.length, words: items.reduce((sum, item) => sum + item.words, 0), bytes: items.reduce((sum, item) => sum + item.bytes, 0), documentIds: items.map(item => item.id) };
+    return { name: source.name, source: source.name, records: items.length, documents: items.length, words: items.reduce((sum, item) => sum + item.words, 0), bytes: items.reduce((sum, item) => sum + item.bytes, 0), documentIds: items.map(item => item.id) };
   });
+  const observations = state.catalog.fieldObservations?.observations || [];
+  if (observations.length && sourceMatches("Field Station")) sources.push({
+    name: "Field Station", source: "Field Station", evidenceKind: "field_observations",
+    records: new Set(observations.map(item => item.id)).size,
+    documents: null, words: null, bytes: null, documentIds: []
+  });
+  return sources;
 }
 
 function barChartLayout(height, itemCount) {
@@ -2912,19 +2919,32 @@ function barChartLayout(height, itemCount) {
 
 function renderBars() {
   const { svg, width, height } = clearChart();
-  const data = aggregateDocuments().sort((a, b) => b[state.config.y] - a[state.config.y]).slice(0, state.config.limit);
+  const data = aggregateDocuments().sort((a, b) => {
+    const av = a[state.config.y], bv = b[state.config.y];
+    return Number.isFinite(av) && Number.isFinite(bv) ? bv - av : Number.isFinite(av) ? -1 : Number.isFinite(bv) ? 1 : a.name.localeCompare(b.name);
+  }).slice(0, state.config.limit);
   if (!data.length) return showEmpty();
   const layout = barChartLayout(height, data.length);
   const margin = { left: Math.min(190, width * .28), right: 45, ...layout.margin };
-  const max = Math.max(...data.map(item => item[state.config.y]), 1);
+  const max = Math.max(...data.map(item => item[state.config.y]).filter(Number.isFinite), 1);
   data.forEach((item, index) => {
-    const barWidth = (width - margin.left - margin.right) * item[state.config.y] / max;
-    svg.append(el("text", { x: margin.left - 8, y: layout.labelY(index), "text-anchor": "end", class: "chart-label" }, item.name.slice(0, 27)));
-    const opacity = .14 + item[state.config.y] / max * .86;
+    const value = item[state.config.y], available = Number.isFinite(value);
+    const barWidth = available ? (width - margin.left - margin.right) * value / max : 0;
+    const labelLimit = Math.max(5, Math.min(27, Math.floor((margin.left - 12) / 7)));
+    const name = item.name.length > labelLimit ? item.name.slice(0, labelLimit - 1) + "…" : item.name;
+    const nameMark = el("text", { x: margin.left - 8, y: layout.labelY(index), "text-anchor": "end", class: "chart-label" }, name);
+    addTitle(nameMark, item.name); svg.append(nameMark);
+    const opacity = available ? .14 + value / max * .86 : 0;
     const rect = el("rect", { x: margin.left, y: layout.barY(index), width: Math.max(2, barWidth), height: layout.barHeight, rx: 1, fill: "#111", "fill-opacity": opacity, stroke: "#111", "stroke-width": 1, class: "mark" });
-    addTitle(rect, `${item.name} · ${formatNumber(item[state.config.y])} ${label(state.config.y)}`);
-    rect.addEventListener("click", () => state.config.aggregation === "entity" ? inspectEntity(item) : inspectGroup(item)); svg.append(rect);
-    svg.append(el("text", { x: Math.min(width - 5, margin.left + barWidth + 6), y: layout.labelY(index), class: "axis-label" }, formatNumber(item[state.config.y])));
+    const caption = available ? `${formatNumber(value)} ${label(state.config.y)}` : `Not applicable · ${formatNumber(item.records)} observation records`;
+    addTitle(rect, `${item.name} · ${caption}`);
+    rect.setAttribute("role", "button"); rect.setAttribute("tabindex", "0");
+    rect.setAttribute("aria-label", `${item.name} · ${caption}`);
+    const inspect = () => state.config.aggregation === "entity" ? inspectEntity(item) : inspectGroup(item);
+    rect.addEventListener("click", inspect);
+    rect.addEventListener("keydown", event => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); inspect(); } });
+    svg.append(rect);
+    svg.append(el("text", { x: Math.min(width - 5, margin.left + barWidth + 6), y: layout.labelY(index), class: "axis-label" }, available ? formatNumber(value) : `N/A · ${formatNumber(item.records)} records`));
   });
   drawIntensityLegend();
   setSummary(`${data.length} ${state.config.aggregation === "entity" ? "entities" : state.config.aggregation === "source" ? "collections" : "formats"}`, "bars");
@@ -5890,6 +5910,7 @@ function setSummary(text, type) {
         : "Hou & Han: 1,853 H II regions · 1,343 molecular clouds · 735 methanol masers · Reid et al.: 199 VLBI trigonometric-parallax anchors · published fits: Norma, Scutum–Centaurus, Sagittarius–Carina, Perseus, and Local · face-on Galactocentric coordinates · 18 kpc display radius · filled points are the 2014 compilation · open circles are the separate 2019 catalog and may overlap · thin curves are the paper's H II statistical fit, not an illustration · drag to orbit · scroll to zoom · no synthetic stars, invented target coordinates, or hand-drawn morphology"
     : ["clock", "drugs", "technologies"].includes(type) ? ""
     : type === "blood" ? ""
+    : type === "bars" && state.config.aggregation === "source" ? "Records count transcript files for documentary collections and published observations for Field Station. These are different evidence types, not equally weighted corroboration. N/A means the measure does not apply."
     : type === "signals" ? "Explicit numeric frequency mentions in corpus text · not live RF measurements · mention does not establish a transmission or cause"
     : type === "coverage" ? "Corpus gaps are not evidence that real-world events did not occur · unknown metadata remains explicit"
     : type === "timeline" ? "Correlative dates are human-curated context · Codex suggested The X-Files premiere"
@@ -6388,6 +6409,7 @@ function inspectCollectionEdge(edge, nodes) {
 }
 
 function inspectGroup(item) {
+  if (item.evidenceKind === "field_observations") return inspectFieldRecordings(fieldIndex().recordings, "Field Station", `${formatNumber(item.records)} published human-reviewed anomalous observation records. Each record may reference multiple reviewed objects; shared recordings are counted once. Transcript words and source bytes are not applicable.`);
   const docs = item.documentIds.map(id => state.documentById.get(id)).filter(Boolean);
   showInspector("collection", item.name, [[item.documents, "documents"], [item.words, "words"], [item.bytes, "source bytes"]], docs.slice(0, 4).map(doc => ({ documentId: doc.id, excerpt: doc.title })), "An aggregate of completed transcript files; it does not alter source content.", "", dossierSelection("documents", docs));
 }
