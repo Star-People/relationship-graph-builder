@@ -1,122 +1,103 @@
-Creative Commons Legal Code
+UFO Files Noncommercial Shared-Source License
+Version 1.0
 
-CC0 1.0 Universal
+This is a custom source-available license, not the GNU GPL, AGPL,
+Mozilla Public License, or an OSI-approved open-source license.
 
-    CREATIVE COMMONS CORPORATION IS NOT A LAW FIRM AND DOES NOT PROVIDE
-    LEGAL SERVICES. DISTRIBUTION OF THIS DOCUMENT DOES NOT CREATE AN
-    ATTORNEY-CLIENT RELATIONSHIP. CREATIVE COMMONS PROVIDES THIS
-    INFORMATION ON AN "AS-IS" BASIS. CREATIVE COMMONS MAKES NO WARRANTIES
-    REGARDING THE USE OF THIS DOCUMENT OR THE INFORMATION OR WORKS
-    PROVIDED HEREUNDER, AND DISCLAIMS LIABILITY FOR DAMAGES RESULTING FROM
-    THE USE OF THIS DOCUMENT OR THE INFORMATION OR WORKS PROVIDED
-    HEREUNDER.
+1. Scope and definitions
 
-Statement of Purpose
+The Licensor is the copyright holder offering a work under these terms.
+Covered Software means software expressly designated by that holder as
+covered by this license, and copyrightable modifications or derivative
+works based on that software. Independent works merely distributed with,
+communicating with, or used alongside Covered Software are not covered
+solely by that association.
 
-The laws of most jurisdictions throughout the world automatically confer
-exclusive Copyright and Related Rights (defined below) upon the creator
-and subsequent owner(s) (each and all, an "owner") of an original work of
-authorship and/or a database (each, a "Work").
+Noncommercial means not primarily intended for or directed toward
+commercial advantage or monetary compensation. A person's or organization's
+nonprofit status does not, by itself, establish that a use is Noncommercial.
+Commercial use includes selling or commercially licensing Covered Software,
+providing it as a paid service, and operating it primarily to support a
+commercial business. Separate written permission from the relevant rights
+holders is required for uses outside this license.
 
-Certain owners wish to permanently relinquish those rights to a Work for
-the purpose of contributing to a commons of creative, cultural and
-scientific works ("Commons") that the public can reliably and without fear
-of later claims of infringement build upon, modify, incorporate in other
-works, reuse and redistribute as freely as possible in any form whatsoever
-and for any purposes, including without limitation commercial purposes.
-These owners may contribute to the Commons to promote the ideal of a free
-culture and the further production of creative, cultural and scientific
-works, or to gain reputation or greater distribution for their Work in
-part through the use and efforts of others.
+Corresponding Source means the preferred form of the Covered Software for
+making modifications, including its modified source, interface definitions,
+dependency information, and scripts and instructions needed to build,
+install, and run it. It excludes general-purpose tools, system libraries,
+credentials, private user data, and separately licensed third-party works;
+identify required third-party dependencies and their applicable terms.
 
-For these and/or other purposes and motivations, and without any
-expectation of additional consideration or compensation, the person
-associating CC0 with a Work (the "Affirmer"), to the extent that he or she
-is an owner of Copyright and Related Rights in the Work, voluntarily
-elects to apply CC0 to the Work and publicly distribute the Work under its
-terms, with knowledge of his or her Copyright and Related Rights in the
-Work and the meaning and intended legal effect of CC0 on those rights.
+2. Permission
 
-1. Copyright and Related Rights. A Work made available under CC0 may be
-protected by copyright and related or neighboring rights ("Copyright and
-Related Rights"). Copyright and Related Rights include, but are not
-limited to, the following:
+Subject to these terms, the Licensor grants a worldwide, royalty-free,
+nonexclusive copyright license to use, reproduce, study, modify, and
+distribute Covered Software solely for Noncommercial purposes. No permission
+for commercial use is granted by this license.
 
-  i. the right to reproduce, adapt, distribute, perform, display,
-     communicate, and translate a Work;
- ii. moral rights retained by the original author(s) and/or performer(s);
-iii. publicity and privacy rights pertaining to a person's image or
-     likeness depicted in a Work;
- iv. rights protecting against unfair competition in regards to a Work,
-     subject to the limitations in paragraph 4(a), below;
-  v. rights protecting the extraction, dissemination, use and reuse of data
-     in a Work;
- vi. database rights (such as those arising under Directive 96/9/EC of the
-     European Parliament and of the Council of 11 March 1996 on the legal
-     protection of databases, and under any national implementation
-     thereof, including any amended or successor version of such
-     directive); and
-vii. other similar, equivalent or corresponding rights throughout the
-     world based on applicable law or treaty, and any national
-     implementations thereof.
+To the extent the Licensor may grant them, this license also grants the
+patent rights necessarily infringed by the Licensor's contributions alone
+or combined with the Covered Software to which they were contributed,
+solely to exercise the permissions granted above.
 
-2. Waiver. To the greatest extent permitted by, but not in contravention
-of, applicable law, Affirmer hereby overtly, fully, permanently,
-irrevocably and unconditionally waives, abandons, and surrenders all of
-Affirmer's Copyright and Related Rights and associated claims and causes
-of action, whether now known or unknown (including existing as well as
-future claims and causes of action), in the Work (i) in all territories
-worldwide, (ii) for the maximum duration provided by applicable law or
-treaty (including future time extensions), (iii) in any current or future
-medium and for any number of copies, and (iv) for any purpose whatsoever,
-including without limitation commercial, advertising or promotional
-purposes (the "Waiver"). Affirmer makes the Waiver for the benefit of each
-member of the public at large and to the detriment of Affirmer's heirs and
-successors, fully intending that such Waiver shall not be subject to
-revocation, rescission, cancellation, termination, or any other legal or
-equitable action to disrupt the quiet enjoyment of the Work by the public
-as contemplated by Affirmer's express Statement of Purpose.
+3. Shared-source derivatives
 
-3. Public License Fallback. Should any part of the Waiver for any reason
-be judged legally invalid or ineffective under applicable law, then the
-Waiver shall be preserved to the maximum extent permitted taking into
-account Affirmer's express Statement of Purpose. In addition, to the
-extent the Waiver is so judged Affirmer hereby grants to each affected
-person a royalty-free, non transferable, non sublicensable, non exclusive,
-irrevocable and unconditional license to exercise Affirmer's Copyright and
-Related Rights in the Work (i) in all territories worldwide, (ii) for the
-maximum duration provided by applicable law or treaty (including future
-time extensions), (iii) in any current or future medium and for any number
-of copies, and (iv) for any purpose whatsoever, including without
-limitation commercial, advertising or promotional purposes (the
-"License"). The License shall be deemed effective as of the date CC0 was
-applied by Affirmer to the Work. Should any part of the License for any
-reason be judged legally invalid or ineffective under applicable law, such
-partial invalidity or ineffectiveness shall not invalidate the remainder
-of the License, and in such case Affirmer hereby affirms that he or she
-will not (i) exercise any of his or her remaining Copyright and Related
-Rights in the Work or (ii) assert any associated claims and causes of
-action with respect to the Work, in either case contrary to Affirmer's
-express Statement of Purpose.
+When you distribute Covered Software, including modified versions or
+executables, you must provide its complete Corresponding Source under this
+same license, without additional restrictions. Deliver that source with the
+software or provide recipients a prominent, working, no-charge download
+link that remains available for at least three years after your last
+such distribution. You may not substitute an unmodified upstream version
+for the source corresponding to your distributed version.
 
-4. Limitations and Disclaimers.
+When you operate a modified version of Covered Software for other users
+over a network, prominently offer those users a no-charge download of that
+version's complete Corresponding Source under this same license. Keep the
+offer available throughout operation and for at least three years after
+last offering that version to those users. Private modifications not
+distributed or operated for other users need not be published.
 
- a. No trademark or patent rights held by Affirmer are waived, abandoned,
-    surrendered, licensed or otherwise affected by this document.
- b. Affirmer offers the Work as-is and makes no representations or
-    warranties of any kind concerning the Work, express, implied,
-    statutory or otherwise, including without limitation warranties of
-    title, merchantability, fitness for a particular purpose, non
-    infringement, or the absence of latent or other defects, accuracy, or
-    the present or absence of errors, whether or not discoverable, all to
-    the greatest extent permissible under applicable law.
- c. Affirmer disclaims responsibility for clearing rights of other persons
-    that may apply to the Work or any use thereof, including without
-    limitation any person's Copyright and Related Rights in the Work.
-    Further, Affirmer disclaims responsibility for obtaining any necessary
-    consents, permissions or other rights required for any use of the
-    Work.
- d. Affirmer understands and acknowledges that Creative Commons is not a
-    party to this document and has no duty or obligation with respect to
-    this CC0 or use of the Work.
+You must license your copyrightable contributions to the Covered Software
+under these same terms when sharing them. Preserve applicable copyright,
+attribution, license, and warranty notices. Clearly identify material
+modifications and include a copy of this license with distributed copies.
 
+4. Third-party works, prior grants, and other rights
+
+This license applies only to rights the Licensor controls. It does not
+replace licenses on third-party dependencies, fonts, photographs, documents,
+source footage, datasets, or other separately identified material. It does
+not impose restrictions on public-domain material or uses independently
+permitted by law. It does not revoke permissions already granted for earlier
+copies or versions under another license, including CC0 or Apache-2.0.
+
+No trademark, endorsement, privacy, publicity, or personal-data rights are
+granted. A separate content license may apply to original media, writing,
+data, annotations, or model artifacts, as expressly identified in the
+repository's licensing notice. Do not infer ownership of source material
+from its inclusion in a repository or training dataset.
+
+5. Termination
+
+Permissions under this license terminate if you breach its conditions.
+They are reinstated if you cure the breach within 30 days after first
+receiving notice from the Licensor, unless the Licensor has previously
+notified you of a breach of this license and reinstated your permissions.
+Termination does not terminate licenses of recipients who comply with
+these terms. Obligations to provide source for prior distributions remain.
+
+6. Disclaimer
+
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, COVERED SOFTWARE IS PROVIDED
+"AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND
+NONINFRINGEMENT. NO LICENSOR OR CONTRIBUTOR IS LIABLE FOR CLAIMS, DAMAGES,
+OR OTHER LIABILITY ARISING FROM THE SOFTWARE OR ITS USE, EXCEPT WHERE
+APPLICABLE LAW DOES NOT PERMIT SUCH EXCLUSION.
+
+7. Versions
+
+This license grants rights under version 1.0 only. A later license version
+or different terms apply only if separately authorized by the relevant
+rights holder. Nothing here requires a recipient to surrender rights
+already validly granted under this version.

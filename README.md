@@ -459,3 +459,10 @@ The vendored Three.js module is version 0.185.1 and is distributed under the MIT
 ## Field Station evidence
 
 The catalog includes a [typed Field Station observation graph](docs/field-observations.md) linking human-reviewed anomalous objects to recordings, original model predictions, coarse regions, and verified Internet Archive evidence. This collection remains separate from transcript-derived claims and counts.
+
+
+## Current licensing
+
+Original UFO Files software is available under the **UFO Files Noncommercial Shared-Source License 1.0**: no commercial use; distributed derivatives and modified network services must provide corresponding source under the same terms. Original content is **CC BY-NC-SA 4.0**, only to the extent we control its rights.
+
+See [LICENSE](LICENSE), [LICENSE-CONTENT.txt](LICENSE-CONTENT.txt), and [LICENSING.md](LICENSING.md) for scope, exceptions, and the transition from prior grants. These are source-available terms, not an OSI-approved open-source license. Third-party materials and public-domain records retain their own status.
