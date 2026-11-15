@@ -1,0 +1,9 @@
+Star People visual identity
+
+Atkinson Hyperlegible by Braille Institute of America. SIL Open Font License 1.1; see ../fonts/ATKINSON-LICENSE.txt.
+
+Night-sky photograph: Nikhil More, "Milkyway nightsky longexposure photography (1) 01", Wikimedia Commons. https://commons.wikimedia.org/wiki/File:Milkyway_nightsky_longexposure_photography_(1)_01.jpg
+Licensed CC BY-SA 4.0: https://creativecommons.org/licenses/by-sa/4.0/
+Responsive crop, dark overlay, and clipping to lettering. These photographic adaptations remain CC BY-SA 4.0.
+
+Star People mark: four observers share one star. Original Star People identity; original-project content license applies.

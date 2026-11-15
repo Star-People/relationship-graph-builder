@@ -6817,10 +6817,10 @@ function pdfGraphProperties() {
 }
 
 let pdfLogoPath;
-const PDF_FONT_FAMILY = "IBM Plex Mono";
+const PDF_FONT_FAMILY = "Atkinson Hyperlegible";
 const PDF_FONTS = [
-  { file: "IBMPlexMono-Regular.ttf", style: "normal" },
-  { file: "IBMPlexMono-Bold.ttf", style: "bold" }
+  { file: "AtkinsonHyperlegible-Regular.ttf", style: "normal" },
+  { file: "AtkinsonHyperlegible-Bold.ttf", style: "bold" }
 ];
 
 function arrayBufferToBase64(buffer) {

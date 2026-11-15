@@ -104,14 +104,14 @@ try {
   await page.locator("#loadingState").waitFor({ state: "detached" });
   await page.evaluate(async () => {
     await Promise.all([
-      document.fonts.load('400 14px "IBM Plex Mono"', "UFO FILES"),
-      document.fonts.load('700 14px "IBM Plex Mono"', "UFO FILES")
+      document.fonts.load('400 14px "Atkinson Hyperlegible"', "UFO FILES"),
+      document.fonts.load('700 14px "Atkinson Hyperlegible"', "UFO FILES")
     ]);
     await document.fonts.ready;
-    const plexFaces = [...document.fonts].filter(face => face.family.replaceAll('"', "") === "IBM Plex Mono");
+    const brandFaces = [...document.fonts].filter(face => face.family.replaceAll('"', "") === "Atkinson Hyperlegible");
     const bodyFamily = getComputedStyle(document.body).fontFamily.replaceAll('"', "");
-    if (!bodyFamily.startsWith("IBM Plex Mono") || plexFaces.length < 2 || plexFaces.some(face => face.status !== "loaded")) {
-      throw new Error("IBM Plex Mono did not load before screenshot capture");
+    if (!bodyFamily.startsWith("Atkinson Hyperlegible") || brandFaces.length < 2 || brandFaces.some(face => face.status !== "loaded")) {
+      throw new Error("Atkinson Hyperlegible did not load before screenshot capture");
     }
   });
   await page.addStyleTag({
