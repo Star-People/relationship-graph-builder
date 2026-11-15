@@ -3523,7 +3523,7 @@ test("all graph types export a presentation PDF with UFO Files provenance", () =
   context.btoa = value => Buffer.from(value, "binary").toString("base64");
   context.history = { replaceState(_state, _title, value) { context.location.hash = value; } };
   const deepLink = vm.runInContext("currentGraphURL()", context);
-  assert.match(deepLink, /^https:\/\/ufo-files\.github\.io\/relationship-graph-builder\/#config=/);
+  assert.match(deepLink, /^https:\/\/data\.starpeople\.ai\/#config=/);
   const encodedConfig = decodeURIComponent(new URL(deepLink).hash.split("config=")[1]);
   const savedConfig = JSON.parse(Buffer.from(encodedConfig, "base64").toString("utf8"));
   assert.deepEqual(savedConfig, {
@@ -3581,8 +3581,8 @@ test("all graph types export a presentation PDF with UFO Files provenance", () =
   assert.match(html, /vendor\/jspdf\.umd\.min\.js[\s\S]*vendor\/svg2pdf\.umd\.min\.js[\s\S]*vendor\/qrcode-generator\.js[\s\S]*app\.js/);
   assert.doesNotMatch(html, /html2canvas/i);
   assert.match(source, /const UFO_FILES_URL = "https:\/\/ufo-files\.app"/);
-  assert.match(source, /const UFO_FILES_GITHUB_URL = "https:\/\/github\.com\/ufo-files"/);
-  assert.match(source, /const GRAPH_BUILDER_URL = "https:\/\/ufo-files\.github\.io\/relationship-graph-builder\/"/);
+  assert.match(source, /const UFO_FILES_GITHUB_URL = "https:\/\/github\.com\/Star-People"/);
+  assert.match(source, /const GRAPH_BUILDER_URL = "https:\/\/data\.starpeople\.ai\/"/);
   assert.match(source, /\["CATALOG GENERATED", generatedAt\]/);
   assert.match(source, /\["SOURCE REVISION", revision\]/);
   assert.match(source, /function currentGraphURL\(\) \{[\s\S]*persistHash\(\)[\s\S]*new URL\(location\.hash, GRAPH_BUILDER_URL\)/);
@@ -3749,7 +3749,7 @@ test("shared public dossiers resolve embedded Craft classes with labels and immu
   assert.equal(result.record.id, "craft-class-egg");
   assert.equal(result.record.label, "Egg");
   assert.ok(result.record.sourceLinks.length > 0);
-  assert.ok(result.record.sourceLinks.every(link => /^https:\/\/github\.com\/ufo-files\/machine-data\/blob\//.test(link.url)));
+  assert.ok(result.record.sourceLinks.every(link => /^https:\/\/github\.com\/Star-People\/machine-data\/blob\//.test(link.url)));
 });
 
 test("Craft dossier records retain their displayed class label", () => {
@@ -4013,6 +4013,8 @@ test("dossier imports reject untrusted source-link schemes and hosts", () => {
     return {
       javascript: validateWith("javascript:alert(1)"),
       lookalike: validateWith("https://github.com.evil.test/ufo-files/machine-data/blob/rev/doc.txt"),
+      legacy: validateWith("https://github.com/ufo-files/machine-data/blob/rev/doc.txt"),
+      wrongRepo: validateWith("https://github.com/Star-People/not-machine-data/blob/rev/doc.txt"),
       trusted: validateWith("https://github.com/Star-People/machine-data/blob/rev/doc.txt")
     };
   })())`, context));
@@ -4021,6 +4023,8 @@ test("dossier imports reject untrusted source-link schemes and hosts", () => {
   assert.equal(result.lookalike.valid, false);
   assert.match(result.javascript.errors.join(" "), /trusted HTTPS machine-data source links/);
   assert.equal(result.trusted.valid, true);
+  assert.equal(result.legacy.valid, true);
+  assert.equal(result.wrongRepo.valid, false);
 });
 
 test("adding records retains the dossier's captured revision and graph configuration", () => {
@@ -4092,7 +4096,7 @@ test("dossier reports are deterministic, neutral, source-linked, and revision-sp
   assert.equal(reports[0], reports[1]);
   assert.match(reports[0], /neutrally lists public catalog records selected by an analyst/i);
   assert.match(reports[0], /Selection and classification do not establish the accuracy/i);
-  assert.match(reports[0], /\[Selected event\]\(https:\/\/github\.com\/ufo-files\/machine-data\/blob\/fixed-revision\/doc-a\.txt\)/);
+  assert.match(reports[0], /\[Selected event\]\(https:\/\/github\.com\/Star-People\/machine-data\/blob\/fixed-revision\/doc-a\.txt\)/);
   assert.match(reports[0], /Source revision: `fixed-revision`/);
   assert.match(reports[0], /Selected entity — Entity; stable ID/);
   assert.doesNotMatch(reports[0], /— Entitie;/);
@@ -4673,7 +4677,7 @@ test("Craft filters preserve measurement availability and dossier-stable class i
   assert.equal(result.widthN, 1);
   assert.equal(result.heightN, 1);
   assert.equal(result.record.id, "craft-class-disc");
-  assert.match(result.record.sourceLinks[0].url, /ufo-files\/machine-data\/blob\/rev\/Example\/report\.txt/);
+  assert.match(result.record.sourceLinks[0].url, /Star-People\/machine-data\/blob\/rev\/Example\/report\.txt/);
 });
 
 test("coverage cells distinguish sparse, unknown, zero, and filtered denominators", () => {
