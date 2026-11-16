@@ -1,13 +1,13 @@
 @font-face {
-  font-family: "Atkinson Hyperlegible";
-  src: url("assets/fonts/AtkinsonHyperlegible-Regular.woff2") format("woff2");
+  font-family: "IBM Plex Mono";
+  src: url("assets/fonts/IBMPlexMono-Regular.ttf") format("truetype");
   font-style: normal;
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
-  font-family: "Atkinson Hyperlegible";
-  src: url("assets/fonts/AtkinsonHyperlegible-Bold.woff2") format("woff2");
+  font-family: "IBM Plex Mono";
+  src: url("assets/fonts/IBMPlexMono-Bold.ttf") format("truetype");
   font-style: normal;
   font-weight: 700;
   font-display: swap;
@@ -26,7 +26,7 @@
   --mint: #f0efe7;
   --shadow: 0 12px 38px rgba(37, 40, 48, .10);
   --radius: 14px;
-  --font: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --font: "IBM Plex Mono", "SF Mono", ui-monospace, monospace;
   --purple: #483a75;
   --lime: #e6f492;
   --header-height: 76px;

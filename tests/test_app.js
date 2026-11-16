@@ -176,7 +176,7 @@ test("Galactic Entities boots from a compact astronomy payload", () => {
   assert.match(source, /state\.publicDossierPayload \|\| publicDossierPayloadFromHash\(\)/);
   assert.match(source, /requestId === null \|\| requestId === state\.typeRequestId\) showCatalogError/);
   assert.match(source, /async function openDossierDialog\(\)[\s\S]*ensureFullCatalog\(\)[\s\S]*initializeDossier\(\)/);
-  assert.match(html, /app\.js\?v=field-source-bars-v1/);
+  assert.match(html, /app\.js\?v=plex-mono-v1/);
   assert.match(html, /map-globe\.js\?v=field-views-v1/);
   assert.match(html, /solar-system\.js\?v=astronomy-renderer-v2/);
   assert.match(fs.readFileSync("solar-system.js", "utf8"), /three\.module\.min\.js\?v=astronomy-renderer-v2/);
@@ -1184,14 +1184,14 @@ test("app typography never renders below 10px", () => {
   assert.match(source, /const authorSize = Math\.max\(10, labelSize \* \.72\);/);
 });
 
-test("screenshots require the bundled Star People typefaces", () => {
+test("screenshots require the bundled IBM Plex Mono typefaces", () => {
   const styles = fs.readFileSync("styles.css", "utf8");
   const script = fs.readFileSync("scripts/capture_graph_screenshots.mjs", "utf8");
-  assert.match(styles, /@font-face \{[\s\S]*?font-family: "Atkinson Hyperlegible";[\s\S]*?AtkinsonHyperlegible-Regular\.woff2[\s\S]*?font-weight: 400;/);
-  assert.match(styles, /@font-face \{[\s\S]*?font-family: "Atkinson Hyperlegible";[\s\S]*?AtkinsonHyperlegible-Bold\.woff2[\s\S]*?font-weight: 700;/);
-  assert.match(styles, /--font: "Atkinson Hyperlegible", system-ui/);
-  assert.match(script, /document\.fonts\.load\('400 14px "Atkinson Hyperlegible"'/);
-  assert.match(script, /document\.fonts\.load\('700 14px "Atkinson Hyperlegible"'/);
+  assert.match(styles, /@font-face \{[\s\S]*?font-family: "IBM Plex Mono";[\s\S]*?IBMPlexMono-Regular\.ttf[\s\S]*?font-weight: 400;/);
+  assert.match(styles, /@font-face \{[\s\S]*?font-family: "IBM Plex Mono";[\s\S]*?IBMPlexMono-Bold\.ttf[\s\S]*?font-weight: 700;/);
+  assert.match(styles, /--font: "IBM Plex Mono", "SF Mono", ui-monospace, monospace/);
+  assert.match(script, /document\.fonts\.load\('400 14px "IBM Plex Mono"'/);
+  assert.match(script, /document\.fonts\.load\('700 14px "IBM Plex Mono"'/);
   assert.match(script, /brandFaces\.some\(face => face\.status !== "loaded"\)/);
 });
 
@@ -3592,7 +3592,7 @@ test("all graph types export a presentation PDF with UFO Files provenance", () =
   assert.match(source, /width: 96, height: 96[\s\S]*qrBottom = qrBounds\.y \+ qrBounds\.height[\s\S]*propertiesY = Math\.max\(414, summaryY \+ 190, qrBottom \+ 16\)/);
   assert.match(source, /function addPDFCoverContinuationPage\(pdf\)[\s\S]*addPage\("letter", "portrait"\)[\s\S]*GRAPH PROPERTIES — CONTINUED/);
   assert.match(source, /rowY \+ rowHeight > 724[\s\S]*addPDFCoverFooter\(pdf\)[\s\S]*addPDFCoverContinuationPage\(pdf\)/);
-  assert.match(source, /const PDF_FONT_FAMILY = "Atkinson Hyperlegible"/);
+  assert.match(source, /const PDF_FONT_FAMILY = "IBM Plex Mono"/);
   assert.match(source, /assets\/fonts\/\$\{font\.file\}[\s\S]*pdf\.addFileToVFS\(font\.file, font\.data\)[\s\S]*pdf\.addFont\(font\.file, PDF_FONT_FAMILY, font\.style\)/);
   assert.match(source, /pdfExportTitle\(\)[\s\S]*currentGraphURL\(\)[\s\S]*graphQRCode\(deepLink\)[\s\S]*new window\.jspdf\.jsPDF[\s\S]*loadPDFFonts\(pdf\)[\s\S]*addPDFCover\([\s\S]*addPDFGraphPage\([\s\S]*pdf\.save\(pdfFilename\(exportTitle\)\)/);
   assert.doesNotMatch(source, /html2canvas|toDataURL\("image\/jpeg"/i);
@@ -3605,8 +3605,8 @@ test("all graph types export a presentation PDF with UFO Files provenance", () =
   assert.ok(fs.statSync("vendor/qrcode-generator.js").size > 50_000);
   assert.ok(fs.statSync("vendor/QRCODE-GENERATOR-LICENSE.txt").size > 1_000);
   assert.ok(fs.statSync("assets/logo.svg").size > 8_000);
-  assert.ok(fs.statSync("assets/fonts/AtkinsonHyperlegible-Regular.ttf").size > 40_000);
-  assert.ok(fs.statSync("assets/fonts/AtkinsonHyperlegible-Bold.ttf").size > 40_000);
+  assert.ok(fs.statSync("assets/fonts/IBMPlexMono-Regular.ttf").size > 40_000);
+  assert.ok(fs.statSync("assets/fonts/IBMPlexMono-Bold.ttf").size > 40_000);
   assert.ok(fs.statSync("assets/fonts/IBM-PLEX-LICENSE.txt").size > 4_000);
   const logo = JSON.parse(vm.runInContext('JSON.stringify(svgPathOperations("M0 0 L460 0 V433 H0 Z", { x: 10, y: 20, width: 92, height: 86.6 }))', context));
   const roundedOperations = logo.operations.map(operation => operation.c
