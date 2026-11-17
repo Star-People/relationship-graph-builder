@@ -6847,11 +6847,9 @@ async function loadPDFFonts(pdf) {
 
 async function loadPDFLogoPath() {
   if (pdfLogoPath) return pdfLogoPath;
-  const response = await fetch("assets/logo.svg");
+  const response = await fetch("assets/brand/starpeople-mark.png?v=exception-1");
   if (!response.ok) throw new Error(`Logo unavailable: ${response.status} ${response.statusText}`);
-  const source = await response.text();
-  pdfLogoPath = source.match(/<path\b[^>]*\bd="([^"]+)"/)?.[1];
-  if (!pdfLogoPath) throw new Error("Logo path unavailable");
+  pdfLogoPath = "data:image/png;base64," + arrayBufferToBase64(await response.arrayBuffer());
   return pdfLogoPath;
 }
 
@@ -6964,8 +6962,7 @@ function addPDFCoverContinuationPage(pdf) {
 
 function addPDFCover(pdf, exportedAt, deepLink, code, logoPath) {
   pdf.setFillColor(255); pdf.rect(0, 0, 612, 792, "F"); pdf.setDrawColor(17); pdf.setLineWidth(.75); pdf.rect(22.5, 22.5, 567, 747);
-  const logo = svgPathOperations(logoPath, { x: 48, y: 49, width: 42, height: 40 });
-  pdf.setFillColor(0); pdf.setLineWidth(logo.strokeWidth); pdf.path(logo.operations); pdf.fillStroke();
+  pdf.addImage(logoPath, "PNG", 48, 49, 40, 40);
   setPDFFont(pdf, 13, true); pdf.text("UFO FILES", 99, 62);
   setPDFFont(pdf, 9); pdf.text("RELATIONSHIP GRAPH EXPORT", 99, 77);
   setPDFFont(pdf, 7.5, true); pdf.textWithLink("ufo-files.app", 99, 94, { url: UFO_FILES_URL }); pdf.textWithLink("github.com/starpeopleai", 171, 94, { url: UFO_FILES_GITHUB_URL });
