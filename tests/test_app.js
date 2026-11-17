@@ -3588,7 +3588,7 @@ test("all graph types export a presentation PDF with UFO Files provenance", () =
   assert.match(source, /function currentGraphURL\(\) \{[\s\S]*persistHash\(\)[\s\S]*new URL\(location\.hash, GRAPH_BUILDER_URL\)/);
   assert.match(source, /for \(const level of \["M", "L"\]\)[\s\S]*code\.addData\(url, "Byte"\)[\s\S]*code\.make\(\)[\s\S]*return null/);
   assert.match(source, /function drawPDFQRCode\(pdf, code, bounds\)[\s\S]*code\.isDark\(row, col\)[\s\S]*pdf\.rect/);
-  assert.match(source, /function addPDFCover\(pdf, exportedAt, deepLink, code, logoPath\)[\s\S]*width: 42, height: 40[\s\S]*RELATIONSHIP GRAPH EXPORT[\s\S]*pdf\.textWithLink\("ufo-files\.app", 99, 94[\s\S]*pdfGraphProperties\(\)/);
+  assert.match(source, /function addPDFCover\(pdf, exportedAt, deepLink, code, logoPath\)[\s\S]*pdf\.addImage\(logoPath, "PNG", 48, 49, 40, 40\)[\s\S]*RELATIONSHIP GRAPH EXPORT[\s\S]*pdf\.textWithLink\("ufo-files\.app", 99, 94[\s\S]*pdfGraphProperties\(\)/);
   assert.match(source, /width: 96, height: 96[\s\S]*qrBottom = qrBounds\.y \+ qrBounds\.height[\s\S]*propertiesY = Math\.max\(414, summaryY \+ 190, qrBottom \+ 16\)/);
   assert.match(source, /function addPDFCoverContinuationPage\(pdf\)[\s\S]*addPage\("letter", "portrait"\)[\s\S]*GRAPH PROPERTIES — CONTINUED/);
   assert.match(source, /rowY \+ rowHeight > 724[\s\S]*addPDFCoverFooter\(pdf\)[\s\S]*addPDFCoverContinuationPage\(pdf\)/);
@@ -3604,7 +3604,7 @@ test("all graph types export a presentation PDF with UFO Files provenance", () =
   assert.ok(fs.statSync("vendor/SVG2PDF-LICENSE.txt").size > 1_000);
   assert.ok(fs.statSync("vendor/qrcode-generator.js").size > 50_000);
   assert.ok(fs.statSync("vendor/QRCODE-GENERATOR-LICENSE.txt").size > 1_000);
-  assert.ok(fs.statSync("assets/logo.svg").size > 8_000);
+  assert.ok(fs.statSync("assets/brand/starpeople-mark.png").size > 1_000);
   assert.ok(fs.statSync("assets/fonts/IBMPlexMono-Regular.ttf").size > 40_000);
   assert.ok(fs.statSync("assets/fonts/IBMPlexMono-Bold.ttf").size > 40_000);
   assert.ok(fs.statSync("assets/fonts/IBM-PLEX-LICENSE.txt").size > 4_000);
@@ -3636,7 +3636,7 @@ test("all graph types export a presentation PDF with UFO Files provenance", () =
     pdfProvenance = () => [];
     pdfGraphProperties = () => Array.from({ length: 48 }, (_, index) => ["Property " + index, "Value " + index]);
     const pdf = {
-      pages: 1, addPage() { this.pages += 1; }, setFillColor() {}, rect() {}, setDrawColor() {},
+      addImage() {}, pages: 1, addPage() { this.pages += 1; }, setFillColor() {}, rect() {}, setDrawColor() {},
       setLineWidth() {}, path() {}, fillStroke() {}, setFont() {}, setFontSize() {}, setTextColor() {},
       text() {}, textWithLink() {}, line() {}, splitTextToSize(value) { return [String(value)]; }
     };
