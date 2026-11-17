@@ -836,3 +836,6 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .timeline-historical-marker-label, .timeline-relevance-cutoff-label, .timeline-recency-guide-label { font-weight: 400; stroke-width: 2px; }
 
 @media (max-width: 600px) { .brand strong { font-size: 14px; } }
+
+/* Keep all graph-configuration sidebar text at regular weight. */
+#builderPanel, #builderPanel * { font-weight: 400; }
