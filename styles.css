@@ -762,11 +762,9 @@ body.graph-fullscreen .stage.field-stage { grid-template-rows: minmax(220px,1fr)
 .topbar { padding: 0 28px; }
 .brand { gap: 12px; }
 .brand-logo { width: 40px; height: 40px; }
-.brand strong { font-size: 25px; font-weight: 400; line-height: 1.05; letter-spacing: -.025em; text-transform: none; color: #252830; }
-@supports (background-clip: text) {
-  .brand strong { background: #252830 url("assets/brand/night-sky.webp") center 60% / 190px auto; background-clip: text; -webkit-background-clip: text; color: transparent; }
-}
-.brand small { font-size: 11px; letter-spacing: .03em; color: var(--muted); }
+.brand strong { font-size: 16px; font-weight: 400; line-height: 1.3; letter-spacing: normal; text-transform: none; color: var(--ink); }
+
+.brand small { font-size: 10px; font-weight: 400; line-height: 1.3; letter-spacing: normal; margin-top: 0; color: var(--muted); }
 .top-actions { gap: 10px; }
 .button, .icon-button { border-color: var(--line); border-radius: 8px; font-size: 13px; text-transform: none; height: 36px; transition: background-color .14s, border-color .14s; }
 .button { padding: 0 15px; }
@@ -819,7 +817,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
   .topbar { padding: 0 16px; }
   .brand-logo { width: 32px; height: 32px; }
   .brand { gap: 9px; }
-  .brand strong { font-size: 22px; }
+
   .top-actions { gap: 7px; }
   .button, .icon-button { min-height: 42px; }
   #dossierButton { padding: 0 10px; font-size: 12px; }
@@ -831,8 +829,10 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
   .type-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
   .type-card { min-width: 0; padding: 11px; }
 }
-@media (max-width: 370px) { .brand-logo { width: 27px; height: 27px; } .brand strong { font-size: 20px; } .type-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 370px) { .brand-logo { width: 27px; height: 27px; } .type-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; } }
 
 .node-label { font-weight: 400; stroke-width: 2px; }
 .timeline-historical-marker-label, .timeline-relevance-cutoff-label, .timeline-recency-guide-label { font-weight: 400; stroke-width: 2px; }
+
+@media (max-width: 600px) { .brand strong { font-size: 14px; } }
