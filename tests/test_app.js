@@ -5266,3 +5266,32 @@ test("Field Station source bars count observations without inventing transcript 
   vm.runInContext('state.config.aggregation="source";state.catalog.fieldObservations.observations=[]',context);
   assert.equal(vm.runInContext('aggregateDocuments().length',context),0);
 });
+
+test("Field Station clock records share documentary groups and markers", () => {
+  const source = fs.readFileSync("app.js", "utf8");
+  const svg = new FakeElement();
+  const recording = { id: "recording:one", recordingId: "one", bundles: new Map() };
+  const context = vm.createContext({
+    state: { config: { fieldEvidence: "all", clockResolution: "hour", clockPeriod: "all" } },
+    clearChart: () => ({ svg, width: 800, height: 600 }),
+    filteredClockMentions: () => [{ minuteOfDial: 61, period: "am", documentId: "doc", source: "A" }],
+    fieldRecordings: () => [recording],
+    FieldEvidence: { clock: () => [{ minuteOfDial: 65, period: "am", documentId: recording.id, source: "Field Station", recording }] },
+    el: (tag, attrs) => { const e = new FakeElement(); e.tagName = tag; for (const [k,v] of Object.entries(attrs)) e.setAttribute(k,v); return e; },
+    valueExtent: () => [2,2],
+    scatterPointMark: () => new FakeElement(),
+    addTitle: () => {}, $: () => ({}), setSummary: () => {}, formatNumber: String,
+    inspectClockGroup: group => { context.inspected = group; }
+  });
+  vm.runInContext(source.slice(source.indexOf("function clockGroups("), source.indexOf("function inspectClockGroup(")), context);
+  vm.runInContext(source.slice(source.indexOf("function renderClock("), source.indexOf("function exportClockTimes(")), context);
+  context.renderClock();
+  const points = svg.children.filter(e => e.classList.contains("clock-point"));
+  assert.equal(points.length, 1);
+  assert.match(points[0].attributes["aria-label"], /2 observations in 2 records/);
+  points[0].listeners.click();
+  assert.equal(context.inspected.observations.length, 2);
+  assert.equal(context.inspected.observations[1].recording, recording);
+  assert.doesNotMatch(source, /field-clock-point|renderFieldPanel/);
+  assert.doesNotMatch(fs.readFileSync("index.html", "utf8"), /fieldObservationsPanel/);
+});
