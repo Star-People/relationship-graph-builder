@@ -4686,32 +4686,6 @@ function fieldRegionPayload() {
   const recordings=fieldRecordings();
   return fieldIndex().regions.filter(region=>recordings.some(r=>r.regions.has(region.id))).map(region=>({...region,recordings:recordings.filter(r=>r.regions.has(region.id)).length}));
 }
-function renderFieldPanel() {
-  const panel=$('#fieldObservationsPanel');
-  const active=['clock','signals','map'].includes(state.config.type);
-  panel.hidden=!active;
-  $('.stage').classList.toggle('field-stage',active);
-  if (!active) { panel.replaceChildren(); return; }
-  const records=state.config.type==='clock'?FieldEvidence.clock(fieldRecordings(),state.config.clockPeriod).map(o=>o.recording):fieldRecordings(), signal=state.config.type==='signals';
-  const shown=signal?records.filter(r=>[...r.bundles.values()].some(b=>b.assets.some(a=>a.name==='rf.jsonl'))):records;
-  panel.replaceChildren();
-  const heading=document.createElement('h3'); heading.textContent=`Field Station · ${formatNumber(shown.length)} ${signal?'recordings with RF evidence':'recordings'}`; panel.append(heading);
-  const note=document.createElement('p'); note.textContent=state.config.type==='clock'?'Recording starts in UTC, not exact sighting times. Diamonds identify Field Station recordings.':signal?'Recorded receiver spectra and Archive evidence; separate from documentary frequency mentions above.':'County boundaries show reported regions, not station positions.';panel.append(note);
-  if(!shown.length){const p=document.createElement('p');p.textContent=fieldIndex().recordings.length?'No Field Station recordings match these filters.':'No published Field Station records in this catalog yet.';panel.append(p);return;}
-  if(state.config.type==='map') for(const region of fieldRegionPayload()) {
-    const button=document.createElement('button');button.className='button';button.textContent=`${region.name} · ${region.recordings} recordings`;
-    button.onclick=()=>{updateConfig('fieldEvidence','field',true);inspectFieldRegion(region.id);window.dispatchEvent(new CustomEvent('ufo-map-focus',{detail:region.labelPosition}));};panel.append(button);
-  }
-  const list=document.createElement('div');list.className='field-recordings';panel.append(list);let count=0;
-  const more=document.createElement('button');more.className='button';more.textContent='More recordings';
-  function append(){for(const r of shown.slice(count,count+20)){
-    const button=document.createElement('button');button.className='field-recording';button.type='button';
-    const title=document.createElement('span');title.textContent=fieldTime(r);
-    const detail=document.createElement('small');detail.textContent=`${r.captureKind} · ${r.objects.size} reviewed objects · ${r.regions.size?[...r.regions].map(fieldRegionName).join('; '):'Location unavailable'}`;
-    button.append(title,detail);button.onclick=()=>inspectFieldRecording(r);list.append(button);
-  }count+=20;more.hidden=count>=shown.length;}
-  more.onclick=append;append();panel.append(more);
-}
 function inspectFieldRegion(id) {
   const records=fieldRecordings().filter(r=>r.regions.has(id));
   inspectFieldRecordings(records,fieldRegionName(id),'County-level region confirmed by capture metadata or an explicitly scoped operator review. No station coordinates are shown.');
@@ -4816,13 +4790,17 @@ function clockPosition(minute, radius, cx, cy) {
 function inspectClockGroup(group) {
   const documents = new Map(state.clockCatalog.documents.map(doc => [doc.id, doc]));
   const evidence = group.observations.map(item => {
+    if (item.recording) return { ...item,
+      sourceLabel: `${item.recording.recordingId} · Field Station · Recording start (UTC)`,
+      sourceURL: [...item.recording.bundles.values()][0]?.url || "",
+      excerpt: `${fieldTime(item.recording)}. Recording coverage is not an exact sighting time.` };
     const doc = documents.get(item.documentId);
     return { ...item, sourceLabel: `${doc?.title || item.documentId} · ${item.source} · ${item.segment}`,
       sourceURL: doc ? machineDataPathURL(doc.path, state.clockCatalog.input) : "" };
   });
   let shown = 50;
-  showInspector("time mention", clockGroupLabel(group), [
-    [evidence.length, "mentions"], [group.documents.size, "documents"],
+  showInspector("time", clockGroupLabel(group), [
+    [evidence.length, "observations"], [group.documents.size, "records"],
     [group.observations.filter(item => item.period === "am").length, "AM"],
     [group.observations.filter(item => item.period === "pm").length, "PM"]
   ], evidence.slice(0, shown));
@@ -4843,9 +4821,9 @@ function renderClock() {
   const { svg, width, height } = clearChart();
   const observations = state.config.fieldEvidence === "field" ? [] : filteredClockMentions();
   const interval = ({ hour: 60, quarter: 15, minute: 1 })[state.config.clockResolution] || 60;
-  const groups = clockGroups(observations, interval);
-  const fieldGroups = clockGroups(FieldEvidence.clock(fieldRecordings(), state.config.clockPeriod), interval);
-  if (!groups.length && !fieldGroups.length) return showEmpty();
+  const recordings = FieldEvidence.clock(fieldRecordings(), state.config.clockPeriod);
+  const groups = clockGroups([...observations, ...recordings], interval);
+  if (!groups.length) return showEmpty();
   const radius = Math.max(40, Math.min(width, height) / 2 - 34), cx = width / 2, cy = height / 2;
   svg.append(el("circle", { cx, cy, r: radius, fill: "none", stroke: "var(--line)", "stroke-width": 1 }));
   for (let tick = 0; tick < 60; tick++) {
@@ -4871,23 +4849,16 @@ function renderClock() {
     mark.setAttribute("role", "button"); mark.setAttribute("tabindex", "0");
     mark.setAttribute("data-clock-minute", group.minute);
     mark.setAttribute("data-clock-period", group.period);
-    mark.setAttribute("aria-label", `${clockGroupLabel(group)}: ${group.observations.length} mentions in ${group.documents.size} documents`);
-    addTitle(mark, `${clockGroupLabel(group)} · ${group.observations.length} mentions · ${group.documents.size} documents`);
+    mark.setAttribute("aria-label", `${clockGroupLabel(group)}: ${group.observations.length} observations in ${group.documents.size} records`);
+    addTitle(mark, `${clockGroupLabel(group)} · ${group.observations.length} observations · ${group.documents.size} records`);
     mark.addEventListener("click", () => inspectClockGroup(group));
     mark.addEventListener("keydown", event => {
       if (["Enter", " "].includes(event.key)) { event.preventDefault(); inspectClockGroup(group); }
     });
     svg.append(mark);
   });
-  fieldGroups.forEach(group => {
-    const p = clockPosition(group.minute, Math.max(8, clockRingRadius(group.period, radius) - 18), cx, cy);
-    const mark = el("path", {d:`M${p.x},${p.y-6} l6,6 -6,6 -6,-6 Z`, fill:"var(--ink)", stroke:"var(--paper)", "stroke-width":1, role:"button", tabindex:0, class:"field-clock-point", "aria-label":`${clockGroupLabel(group)} UTC · ${group.observations.length} Field Station recording starts`});
-    addTitle(mark, `${clockGroupLabel(group)} UTC · ${group.observations.length} recording starts`);
-    const inspect=()=>inspectFieldRecordings(group.observations.map(o=>o.recording),`${clockGroupLabel(group)} UTC`);
-    mark.addEventListener("click",inspect);mark.addEventListener("keydown",e=>{if(["Enter"," "].includes(e.key)){e.preventDefault();inspect();}});svg.append(mark);
-  });
   $("#legend").innerHTML = "";
-  setSummary(`${fieldGroups.reduce((n,g)=>n+g.observations.length,0)} Field Station recording starts · ${formatNumber(observations.length)} mentions · ${formatNumber(new Set(observations.map(item => item.documentId)).size)} documents · ${new Set(groups.map(group => group.minute)).size} ${interval === 60 ? "hours" : interval === 15 ? "intervals" : "times"}`, "clock");
+  setSummary(`${recordings.length} recording starts · ${formatNumber(observations.length)} mentions · ${formatNumber(new Set(observations.map(item => item.documentId)).size)} documents · ${new Set(groups.map(group => group.minute)).size} ${interval === 60 ? "hours" : interval === 15 ? "intervals" : "times"}`, "clock");
 }
 
 function exportClockTimes() {
@@ -5991,7 +5962,6 @@ function renderGraph() {
   $("#chartWrap").classList.toggle("coverage-mode", state.config.type === "coverage");
   $("#emptyState").hidden = true;
   $("#emptyState").textContent = "No records match these settings.";
-  renderFieldPanel();
   $("#graphTitle").textContent = state.config.title;
   $("#resetZoom").hidden = !["network", "map", "solar"].includes(state.config.type);
   $("#mapAnimationButton").hidden = state.config.type !== "map";
